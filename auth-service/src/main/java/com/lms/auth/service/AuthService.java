@@ -59,15 +59,19 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         String email = normalizeEmail(request.getEmail());
+        String fullName = request.getFullName().trim();
+        String password = request.getPassword();
 
         if (credentialRepository.existsByEmailIgnoreCase(email)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "This email is already registered. Please sign in instead.");
         }
 
         AuthCredential user = credentialRepository.save(AuthCredential.builder()
                 .email(email)
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .fullName(request.getFullName().trim())
+                .passwordHash(passwordEncoder.encode(password))
+                .fullName(fullName)
                 .role(UserRole.STUDENT)
                 .active(true)
                 .build());

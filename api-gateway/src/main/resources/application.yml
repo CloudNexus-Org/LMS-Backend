@@ -9,6 +9,8 @@ spring:
       discovery:
         locator:
           enabled: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Allow-Methods, RETAIN_FIRST
       routes:
         - id: auth-service
           uri: ${AUTH_SERVICE_URI:http://localhost:8081}
@@ -19,11 +21,11 @@ spring:
           predicates:
             - Path=/api/users/**
         - id: catalog-service
-          uri: lb://catalog-service
+          uri: ${CATALOG_SERVICE_URI:http://localhost:8083}
           predicates:
             - Path=/api/catalog/**
         - id: mentor-service
-          uri: lb://mentor-service
+          uri: ${MENTOR_SERVICE_URI:http://localhost:8084}
           predicates:
             - Path=/api/mentors/**
         - id: content-service
@@ -51,7 +53,7 @@ spring:
           predicates:
             - Path=/api/certificates/**
         - id: review-service
-          uri: lb://review-service
+          uri: ${REVIEW_SERVICE_URI:http://localhost:8091}
           predicates:
             - Path=/api/reviews/**
         - id: notification-service

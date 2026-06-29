@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "lms-full-collection-v2",
     "name": "LMS",
-    "description": "Complete LMS API collection \u2014 all microservices.\n\n**No environment required** \u2014 all service URLs are hardcoded to localhost.\nOnly `accessToken` / `refreshToken` need login (run Auth \u2192 03 Login admin first).\n\n| Service | Port |\n|---------|------|\n| Eureka | 8761 |\n| Gateway | 8080 |\n| Auth | 8081 |\n| User | 8082 |\n| Catalog | 8083 |\n| Mentor | 8084 |\n| Review | 8091 |\n| Admin | 8094 |\n\n**Seed login:** admin@cloudnexus.com / Password123!\n**Headers:** User APIs use X-User-Id: 1, Admin APIs use X-User-Role: ADMIN, X-User-Id: 4",
+    "description": "Complete LMS API collection — all microservices via **API Gateway**.\n\n**Base URL:** `{{baseUrl}}` → `http://localhost:8080` (import LMS-Postman-Environment.json)\n\nRun **Auth → 03 Login (admin)** first to set `accessToken` / `refreshToken`.\n\n| Route | Gateway path |\n|-------|-------------|\n| Auth | /api/auth/** |\n| User | /api/users/** |\n| Catalog | /api/catalog/** |\n| Mentor | /api/mentors/** |\n| Review | /api/reviews/** |\n| Admin | /api/admin/** |\n\n**Seed login:** admin@cloudnexus.com / Password123!\n**Mentor login:** arjan@cloudnexus.com / Password123!\n**Headers:** Admin APIs → X-User-Role: ADMIN, X-User-Id: 1",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -14,6 +14,21 @@
     {
       "key": "refreshToken",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "adminUserId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "mentorUserId",
+      "value": "2",
       "type": "string"
     }
   ],
@@ -32,40 +47,61 @@
           "name": "Gateway Health",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8080/actuator/health"
+            "url": "{{baseUrl}}/actuator/health"
           }
         },
         {
-          "name": "Gateway \u2192 Auth Health (via Eureka)",
+          "name": "Gateway → Auth Health (via Eureka)",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8080/api/auth/health"
+            "url": "{{baseUrl}}/api/auth/health"
           }
         },
         {
-          "name": "Gateway \u2192 User Health (via Eureka)",
+          "name": "Gateway → User Health (via Eureka)",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8080/api/users/health"
+            "url": "{{baseUrl}}/api/users/health"
           }
         },
         {
-          "name": "Gateway \u2192 Admin Health (via Eureka)",
+          "name": "Gateway → Admin Health (via Eureka)",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8080/api/admin/health"
+            "url": "{{baseUrl}}/api/admin/health"
+          }
+        },
+        {
+          "name": "Gateway → Catalog Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/catalog/health"
+          }
+        },
+        {
+          "name": "Gateway → Mentor Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/mentors"
+          }
+        },
+        {
+          "name": "Gateway → Review Health",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reviews/courses/1/summary"
           }
         }
       ]
     },
     {
-      "name": "1. Auth Service (12)",
+      "name": "1. Auth Service (12) — via Gateway",
       "item": [
         {
           "name": "01 Health",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8081/api/auth/health"
+            "url": "{{baseUrl}}/api/auth/health"
           }
         },
         {
@@ -82,11 +118,11 @@
               "mode": "raw",
               "raw": "{\n  \"fullName\": \"Priya Verma\",\n  \"email\": \"priya.new@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/register"
+            "url": "{{baseUrl}}/api/auth/register"
           }
         },
         {
-          "name": "03 Login (admin) \u2b50 run first",
+          "name": "03 Login (admin) ⭐ run first",
           "event": [
             {
               "listen": "test",
@@ -120,7 +156,42 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@cloudnexus.com\",\n  \"password\": \"Password123!\",\n  \"rememberMe\": false\n}"
             },
-            "url": "http://localhost:8081/api/auth/login"
+            "url": "{{baseUrl}}/api/auth/login"
+          }
+        },
+        {
+          "name": "03b Login (mentor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "  if (json.user && json.user.id) {",
+                  "    pm.collectionVariables.set('mentorUserId', String(json.user.id));",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"arjan@cloudnexus.com\",\n  \"password\": \"Password123!\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/auth/login"
           }
         },
         {
@@ -137,7 +208,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"password\": \"Password123!\",\n  \"rememberMe\": false\n}"
             },
-            "url": "http://localhost:8081/api/auth/login"
+            "url": "{{baseUrl}}/api/auth/login"
           }
         },
         {
@@ -150,7 +221,7 @@
                 "value": "Bearer {{accessToken}}"
               }
             ],
-            "url": "http://localhost:8081/api/auth/me"
+            "url": "{{baseUrl}}/api/auth/me"
           }
         },
         {
@@ -167,7 +238,7 @@
               "mode": "raw",
               "raw": "{\n  \"token\": \"{{accessToken}}\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/validate-token"
+            "url": "{{baseUrl}}/api/auth/validate-token"
           }
         },
         {
@@ -184,7 +255,7 @@
               "mode": "raw",
               "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/refresh-token"
+            "url": "{{baseUrl}}/api/auth/refresh-token"
           }
         },
         {
@@ -201,7 +272,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"alex.chen@example.com\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/forgot-password"
+            "url": "{{baseUrl}}/api/auth/forgot-password"
           }
         },
         {
@@ -218,7 +289,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"code\": \"REPLACE_WITH_OTP_FROM_DB\",\n  \"purpose\": \"PASSWORD_RESET\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/verify-otp"
+            "url": "{{baseUrl}}/api/auth/verify-otp"
           }
         },
         {
@@ -235,7 +306,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"purpose\": \"PASSWORD_RESET\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/resend-otp"
+            "url": "{{baseUrl}}/api/auth/resend-otp"
           }
         },
         {
@@ -252,7 +323,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"code\": \"REPLACE_WITH_OTP_FROM_DB\",\n  \"purpose\": \"PASSWORD_RESET\",\n  \"newPassword\": \"Password123!\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/reset-password"
+            "url": "{{baseUrl}}/api/auth/reset-password"
           }
         },
         {
@@ -273,7 +344,7 @@
               "mode": "raw",
               "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"Password123!\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/change-password"
+            "url": "{{baseUrl}}/api/auth/change-password"
           }
         },
         {
@@ -294,19 +365,19 @@
               "mode": "raw",
               "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
             },
-            "url": "http://localhost:8081/api/auth/logout"
+            "url": "{{baseUrl}}/api/auth/logout"
           }
         }
       ]
     },
     {
-      "name": "2. User Service (14)",
+      "name": "2. User Service (14) — via Gateway",
       "item": [
         {
           "name": "01 Health",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8082/api/users/health"
+            "url": "{{baseUrl}}/api/users/health"
           }
         },
         {
@@ -319,7 +390,7 @@
                 "value": "1"
               }
             ],
-            "url": "http://localhost:8082/api/users/profile"
+            "url": "{{baseUrl}}/api/users/profile"
           }
         },
         {
@@ -340,7 +411,7 @@
               "mode": "raw",
               "raw": "{\n  \"fullName\": \"Alex Chen\",\n  \"bio\": \"Backend learner\",\n  \"phone\": \"+91-9876543210\",\n  \"location\": \"Mumbai\"\n}"
             },
-            "url": "http://localhost:8082/api/users/profile"
+            "url": "{{baseUrl}}/api/users/profile"
           }
         },
         {
@@ -361,7 +432,7 @@
               "mode": "raw",
               "raw": "{\n  \"avatarUrl\": \"https://randomuser.me/api/portraits/men/32.jpg\"\n}"
             },
-            "url": "http://localhost:8082/api/users/profile/avatar"
+            "url": "{{baseUrl}}/api/users/profile/avatar"
           }
         },
         {
@@ -374,7 +445,7 @@
                 "value": "1"
               }
             ],
-            "url": "http://localhost:8082/api/users/profile/settings"
+            "url": "{{baseUrl}}/api/users/profile/settings"
           }
         },
         {
@@ -395,7 +466,7 @@
               "mode": "raw",
               "raw": "{\n  \"theme\": \"dark\",\n  \"language\": \"en\",\n  \"emailNotifications\": true,\n  \"pushNotifications\": false\n}"
             },
-            "url": "http://localhost:8082/api/users/profile/settings"
+            "url": "{{baseUrl}}/api/users/profile/settings"
           }
         },
         {
@@ -408,7 +479,7 @@
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8082/api/users?page=0&size=20"
+            "url": "{{baseUrl}}/api/users?page=0&size=20"
           }
         },
         {
@@ -421,7 +492,7 @@
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8082/api/users/1"
+            "url": "{{baseUrl}}/api/users/1"
           }
         },
         {
@@ -442,7 +513,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"new.user@example.com\",\n  \"fullName\": \"New User\",\n  \"role\": \"STUDENT\"\n}"
             },
-            "url": "http://localhost:8082/api/users"
+            "url": "{{baseUrl}}/api/users"
           }
         },
         {
@@ -463,7 +534,7 @@
               "mode": "raw",
               "raw": "{\n  \"fullName\": \"Alex Chen\",\n  \"bio\": \"Updated by admin\"\n}"
             },
-            "url": "http://localhost:8082/api/users/1"
+            "url": "{{baseUrl}}/api/users/1"
           }
         },
         {
@@ -484,7 +555,7 @@
               "mode": "raw",
               "raw": "{\n  \"status\": \"ACTIVE\"\n}"
             },
-            "url": "http://localhost:8082/api/users/5/status"
+            "url": "{{baseUrl}}/api/users/5/status"
           }
         },
         {
@@ -497,7 +568,7 @@
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8082/api/users/99"
+            "url": "{{baseUrl}}/api/users/99"
           }
         },
         {
@@ -518,7 +589,7 @@
               "mode": "raw",
               "raw": "{\n  \"fullName\": \"Dr. New Mentor\",\n  \"username\": \"newmentor\",\n  \"email\": \"mentor.new@cloudnexus.com\",\n  \"password\": \"Password123!\",\n  \"professionalRole\": \"Principal Engineer\",\n  \"company\": \"Cloud Nexus\",\n  \"trackLabel\": \"Cloud & DevOps\",\n  \"location\": \"Bangalore\",\n  \"bio\": \"Teaching cloud architecture.\"\n}"
             },
-            "url": "http://localhost:8082/api/users/mentors"
+            "url": "{{baseUrl}}/api/users/mentors"
           }
         },
         {
@@ -531,7 +602,7 @@
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8082/api/users/mentors"
+            "url": "{{baseUrl}}/api/users/mentors"
           }
         },
         {
@@ -544,19 +615,19 @@
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8082/api/users/students/1/summary"
+            "url": "{{baseUrl}}/api/users/students/1/summary"
           }
         }
       ]
     },
     {
-      "name": "3. Admin Service (12)",
+      "name": "3. Admin Service (12) — via Gateway",
       "item": [
         {
           "name": "01 Health",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8094/api/admin/health"
+            "url": "{{baseUrl}}/api/admin/health"
           }
         },
         {
@@ -566,14 +637,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/approvals/courses?status=Pending"
+            "url": "{{baseUrl}}/api/admin/approvals/courses?status=Pending"
           }
         },
         {
@@ -583,14 +654,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/approvals/courses/C-8292"
+            "url": "{{baseUrl}}/api/admin/approvals/courses/C-8292"
           }
         },
         {
@@ -600,14 +671,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/approvals/courses/C-8292/approve"
+            "url": "{{baseUrl}}/api/admin/approvals/courses/C-8292/approve"
           }
         },
         {
@@ -617,7 +688,7 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
@@ -632,7 +703,7 @@
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Needs more hands-on labs and clearer module structure.\"\n}"
             },
-            "url": "http://localhost:8094/api/admin/approvals/courses/C-8290/reject"
+            "url": "{{baseUrl}}/api/admin/approvals/courses/C-8290/reject"
           }
         },
         {
@@ -642,14 +713,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/financials/summary"
+            "url": "{{baseUrl}}/api/admin/financials/summary"
           }
         },
         {
@@ -659,14 +730,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/financials/transactions"
+            "url": "{{baseUrl}}/api/admin/financials/transactions"
           }
         },
         {
@@ -676,14 +747,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/financials/payouts"
+            "url": "{{baseUrl}}/api/admin/financials/payouts"
           }
         },
         {
@@ -693,7 +764,7 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
@@ -708,7 +779,7 @@
               "mode": "raw",
               "raw": "{\n  \"mentorId\": 2,\n  \"amount\": 1500,\n  \"period\": \"2026-06\"\n}"
             },
-            "url": "http://localhost:8094/api/admin/financials/payouts"
+            "url": "{{baseUrl}}/api/admin/financials/payouts"
           }
         },
         {
@@ -718,14 +789,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/settings"
+            "url": "{{baseUrl}}/api/admin/settings"
           }
         },
         {
@@ -735,7 +806,7 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
@@ -750,7 +821,7 @@
               "mode": "raw",
               "raw": "{\n  \"platformName\": \"Cloud Nexus\",\n  \"commissionPct\": 30,\n  \"gstRate\": 0.18,\n  \"currency\": \"INR\",\n  \"supportEmail\": \"support@cloudnexus.com\"\n}"
             },
-            "url": "http://localhost:8094/api/admin/settings"
+            "url": "{{baseUrl}}/api/admin/settings"
           }
         },
         {
@@ -760,14 +831,14 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8094/api/admin/reports/platform"
+            "url": "{{baseUrl}}/api/admin/reports/platform"
           }
         },
         {
@@ -777,7 +848,7 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
@@ -792,13 +863,13 @@
               "mode": "raw",
               "raw": "{\n  \"reportType\": \"financial\",\n  \"fromDate\": \"2026-01-01\",\n  \"toDate\": \"2026-06-30\"\n}"
             },
-            "url": "http://localhost:8094/api/admin/reports/generate"
+            "url": "{{baseUrl}}/api/admin/reports/generate"
           }
         }
       ]
     },
     {
-      "name": "4. Gateway Routes (via port 8080)",
+      "name": "4. Gateway Smoke Tests",
       "item": [
         {
           "name": "Login via Gateway",
@@ -814,7 +885,7 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@cloudnexus.com\",\n  \"password\": \"Password123!\",\n  \"rememberMe\": false\n}"
             },
-            "url": "http://localhost:8080/api/auth/login"
+            "url": "{{baseUrl}}/api/auth/login"
           }
         },
         {
@@ -827,7 +898,7 @@
                 "value": "1"
               }
             ],
-            "url": "http://localhost:8080/api/users/profile"
+            "url": "{{baseUrl}}/api/users/profile"
           }
         },
         {
@@ -837,27 +908,27 @@
             "header": [
               {
                 "key": "X-User-Id",
-                "value": "4"
+                "value": "{{adminUserId}}"
               },
               {
                 "key": "X-User-Role",
                 "value": "ADMIN"
               }
             ],
-            "url": "http://localhost:8080/api/admin/approvals/courses?status=Pending"
+            "url": "{{baseUrl}}/api/admin/approvals/courses?status=Pending"
           }
         }
       ]
     },
     {
-      "name": "5. Catalog Service (8083)",
+      "name": "5. Catalog Service — via Gateway",
       "item": [
         {
           "name": "Health Check",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/health"
+            "url": "{{baseUrl}}/api/catalog/health"
           }
         },
         {
@@ -866,9 +937,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8083/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
+              "raw": "{{baseUrl}}/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
               "host": [
-                "http://localhost:8083"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
@@ -901,7 +972,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/courses/featured"
+            "url": "{{baseUrl}}/api/catalog/courses/featured"
           }
         },
         {
@@ -909,7 +980,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/courses/filters"
+            "url": "{{baseUrl}}/api/catalog/courses/filters"
           }
         },
         {
@@ -917,7 +988,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/courses/aws-solution-architect"
+            "url": "{{baseUrl}}/api/catalog/courses/aws-solution-architect"
           }
         },
         {
@@ -925,7 +996,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/courses/aws-solution-architect/preview"
+            "url": "{{baseUrl}}/api/catalog/courses/aws-solution-architect/preview"
           }
         },
         {
@@ -933,7 +1004,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/tracks"
+            "url": "{{baseUrl}}/api/catalog/tracks"
           }
         },
         {
@@ -941,7 +1012,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/tracks/cloud"
+            "url": "{{baseUrl}}/api/catalog/tracks/cloud"
           }
         },
         {
@@ -949,7 +1020,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/tracks/cloud/courses"
+            "url": "{{baseUrl}}/api/catalog/tracks/cloud/courses"
           }
         },
         {
@@ -957,7 +1028,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/explore/cloud"
+            "url": "{{baseUrl}}/api/catalog/explore/cloud"
           }
         },
         {
@@ -966,9 +1037,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8083/api/catalog/explore/search?q=aws&difficulty=Intermediate&page=0&size=12",
+              "raw": "{{baseUrl}}/api/catalog/explore/search?q=aws&difficulty=Intermediate&page=0&size=12",
               "host": [
-                "http://localhost:8083"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
@@ -1002,7 +1073,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/categories"
+            "url": "{{baseUrl}}/api/catalog/categories"
           }
         },
         {
@@ -1010,7 +1081,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/stats/public"
+            "url": "{{baseUrl}}/api/catalog/stats/public"
           }
         },
         {
@@ -1018,7 +1089,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/faq"
+            "url": "{{baseUrl}}/api/catalog/faq"
           }
         },
         {
@@ -1026,7 +1097,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/testimonials"
+            "url": "{{baseUrl}}/api/catalog/testimonials"
           }
         },
         {
@@ -1034,20 +1105,49 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8083/api/catalog/how-it-works"
+            "url": "{{baseUrl}}/api/catalog/how-it-works"
+          }
+        },
+        {
+          "name": "Submit Course for Approval (Mentor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Advanced Kubernetes Patterns Workshop\",\n  \"category\": \"Cloud & DevOps\",\n  \"level\": \"Advanced\",\n  \"description\": \"Learn production-grade Kubernetes deployment strategies, Helm charts, service mesh integration, and observability patterns for cloud-native apps.\",\n  \"outcomes\": [\"Deploy multi-cluster apps\", \"Use Helm and GitOps\"],\n  \"tags\": [\"Kubernetes\", \"DevOps\"],\n  \"modules\": 2,\n  \"lessons\": 4,\n  \"pricingModel\": \"paid\",\n  \"price\": 99.99,\n  \"mentorName\": \"Dr. Arjan Singh\"\n}"
+            },
+            "url": "{{baseUrl}}/api/catalog/courses/submit"
           }
         }
       ]
     },
     {
-      "name": "6. Mentor Service (8084)",
+      "name": "6. Mentor Service — via Gateway",
       "item": [
         {
           "name": "List Mentors",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8084/api/mentors"
+            "url": "{{baseUrl}}/api/mentors"
           }
         },
         {
@@ -1055,7 +1155,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8084/api/mentors/arjan-singh"
+            "url": "{{baseUrl}}/api/mentors/arjan-singh"
           }
         },
         {
@@ -1063,7 +1163,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8084/api/mentors/arjan-singh/courses"
+            "url": "{{baseUrl}}/api/mentors/arjan-singh/courses"
           }
         },
         {
@@ -1071,7 +1171,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8084/api/mentors/arjan-singh/reviews"
+            "url": "{{baseUrl}}/api/mentors/arjan-singh/reviews"
           }
         },
         {
@@ -1084,7 +1184,7 @@
                 "value": "101"
               }
             ],
-            "url": "http://localhost:8084/api/mentors/me/dashboard"
+            "url": "{{baseUrl}}/api/mentors/me/dashboard"
           }
         },
         {
@@ -1097,7 +1197,7 @@
                 "value": "101"
               }
             ],
-            "url": "http://localhost:8084/api/mentors/me/profile"
+            "url": "{{baseUrl}}/api/mentors/me/profile"
           }
         },
         {
@@ -1116,9 +1216,9 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bio\": \"Updated bio \u2014 10+ years building distributed systems.\",\n  \"longBio\": \"Updated long bio with more mentorship focus.\",\n  \"location\": \"San Francisco, CA\",\n  \"available\": true,\n  \"specialties\": [\"System Design\", \"Go\", \"Kubernetes\"]\n}"
+              "raw": "{\n  \"bio\": \"Updated bio — 10+ years building distributed systems.\",\n  \"longBio\": \"Updated long bio with more mentorship focus.\",\n  \"location\": \"San Francisco, CA\",\n  \"available\": true,\n  \"specialties\": [\"System Design\", \"Go\", \"Kubernetes\"]\n}"
             },
-            "url": "http://localhost:8084/api/mentors/me/profile"
+            "url": "{{baseUrl}}/api/mentors/me/profile"
           }
         },
         {
@@ -1131,7 +1231,7 @@
                 "value": "101"
               }
             ],
-            "url": "http://localhost:8084/api/mentors/me/students"
+            "url": "{{baseUrl}}/api/mentors/me/students"
           }
         },
         {
@@ -1144,7 +1244,7 @@
                 "value": "101"
               }
             ],
-            "url": "http://localhost:8084/api/mentors/me/students/201"
+            "url": "{{baseUrl}}/api/mentors/me/students/201"
           }
         },
         {
@@ -1157,13 +1257,13 @@
                 "value": "101"
               }
             ],
-            "url": "http://localhost:8084/api/mentors/me/notifications-count"
+            "url": "{{baseUrl}}/api/mentors/me/notifications-count"
           }
         }
       ]
     },
     {
-      "name": "7. Review Service (8091)",
+      "name": "7. Review Service — via Gateway",
       "item": [
         {
           "name": "Course Reviews List",
@@ -1171,9 +1271,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "http://localhost:8091/api/reviews/courses/2?page=0&size=10",
+              "raw": "{{baseUrl}}/api/reviews/courses/2?page=0&size=10",
               "host": [
-                "http://localhost:8091"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
@@ -1199,7 +1299,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "http://localhost:8091/api/reviews/courses/2/summary"
+            "url": "{{baseUrl}}/api/reviews/courses/2/summary"
           }
         },
         {
@@ -1220,7 +1320,7 @@
               "mode": "raw",
               "raw": "{\n  \"rating\": 5,\n  \"title\": \"Modern JS is fantastic\",\n  \"body\": \"Clear explanations on ES6+, async patterns, and project structure.\",\n  \"reviewerName\": \"Rohan Mehta\"\n}"
             },
-            "url": "http://localhost:8091/api/reviews/courses/3"
+            "url": "{{baseUrl}}/api/reviews/courses/3"
           }
         },
         {
@@ -1241,7 +1341,7 @@
               "mode": "raw",
               "raw": "{\n  \"rating\": 5,\n  \"title\": \"Excellent deep dive into Azure AI (updated)\",\n  \"body\": \"Even better after the new RAG module was added.\",\n  \"reviewerName\": \"Priya Verma\"\n}"
             },
-            "url": "http://localhost:8091/api/reviews/1"
+            "url": "{{baseUrl}}/api/reviews/1"
           }
         },
         {
@@ -1254,7 +1354,7 @@
                 "value": "999"
               }
             ],
-            "url": "http://localhost:8091/api/reviews/1/helpful"
+            "url": "{{baseUrl}}/api/reviews/1/helpful"
           }
         },
         {
@@ -1267,7 +1367,7 @@
                 "value": "201"
               }
             ],
-            "url": "http://localhost:8091/api/reviews/me"
+            "url": "{{baseUrl}}/api/reviews/me"
           }
         },
         {
@@ -1281,9 +1381,9 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8091/api/reviews/mentor/me?courseIds=1&courseIds=2",
+              "raw": "{{baseUrl}}/api/reviews/mentor/me?courseIds=1&courseIds=2",
               "host": [
-                "http://localhost:8091"
+                "{{baseUrl}}"
               ],
               "path": [
                 "api",
@@ -1314,7 +1414,7 @@
                 "value": "201"
               }
             ],
-            "url": "http://localhost:8091/api/reviews/3"
+            "url": "{{baseUrl}}/api/reviews/3"
           }
         }
       ]

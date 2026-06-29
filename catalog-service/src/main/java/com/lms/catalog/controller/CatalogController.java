@@ -3,6 +3,7 @@ package com.lms.catalog.controller;
 import com.lms.catalog.dto.CourseResponse;
 import com.lms.catalog.dto.FilterOptionsResponse;
 import com.lms.catalog.dto.PagedResponse;
+import com.lms.catalog.dto.SubmitCourseRequest;
 import com.lms.catalog.dto.TestimonialResponse;
 import com.lms.catalog.dto.TrackResponse;
 import com.lms.catalog.model.Category;
@@ -39,6 +40,14 @@ public class CatalogController {
     @GetMapping("/courses/featured")
     public List<CourseResponse> featuredCourses() {
         return catalogService.getFeaturedCourses();
+    }
+
+    @PostMapping("/courses/submit")
+    public CourseResponse submitCourse(
+            @RequestHeader("X-User-Id") Long mentorId,
+            @RequestHeader("X-User-Role") String role,
+            @RequestBody SubmitCourseRequest request) {
+        return catalogService.submitCourseForApproval(mentorId, role, request);
     }
 
     @GetMapping("/courses/filters")
@@ -115,5 +124,12 @@ public class CatalogController {
     @GetMapping("/health")
     public Map<String, String> health() {
         return Map.of("status", "UP", "service", "catalog-service");
+    }
+
+    /** Called by admin-service when a course is approved (sync + Kafka fallback) */
+    @PostMapping("/internal/courses/{courseId}/publish")
+    public Map<String, String> publishCourseInternal(@PathVariable Long courseId) {
+        catalogService.publishCourse(courseId);
+        return Map.of("status", "PUBLISHED", "courseId", String.valueOf(courseId));
     }
 }

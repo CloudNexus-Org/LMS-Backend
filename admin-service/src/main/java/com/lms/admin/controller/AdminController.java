@@ -125,4 +125,11 @@ public class AdminController {
     public Map<String, String> health() {
         return Map.of("status", "UP", "service", "admin-service");
     }
+
+    /** Called by catalog-service when a mentor submits a course (sync + Kafka fallback) */
+    @PostMapping("/internal/approvals")
+    public Map<String, String> internalCreateApproval(@RequestBody Map<String, Object> event) {
+        adminService.createPendingApproval(event);
+        return Map.of("status", "created", "courseCode", String.valueOf(event.get("courseCode")));
+    }
 }
