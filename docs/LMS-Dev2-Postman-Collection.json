@@ -1,0 +1,380 @@
+{
+  "info": {
+    "_postman_id": "lms-dev2-catalog-mentor-review",
+    "name": "LMS Dev2 — Catalog, Mentor, Review",
+    "description": "All 34 APIs for catalog-service (8083), mentor-service (8084), review-service (8091).\n\nAuth: use X-User-Id header until auth-service is ready.\nMentor userId: 101 (arjan-singh) | Student userId: 201, 301",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "catalog_base", "value": "http://localhost:8083" },
+    { "key": "mentor_base", "value": "http://localhost:8084" },
+    { "key": "review_base", "value": "http://localhost:8091" },
+    { "key": "mentor_user_id", "value": "101" },
+    { "key": "student_user_id", "value": "201" },
+    { "key": "student_user_id_2", "value": "301" }
+  ],
+  "item": [
+    {
+      "name": "1. Catalog Service (8083)",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/health"
+          }
+        },
+        {
+          "name": "List Courses (with filters)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalog_base}}/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
+              "host": ["{{catalog_base}}"],
+              "path": ["api", "catalog", "courses"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "12" },
+                { "key": "difficulty", "value": "Intermediate" },
+                { "key": "sort", "value": "rating" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Featured Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/courses/featured"
+          }
+        },
+        {
+          "name": "Course Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/courses/filters"
+          }
+        },
+        {
+          "name": "Course By Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/courses/aws-solution-architect"
+          }
+        },
+        {
+          "name": "Course Preview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/courses/aws-solution-architect/preview"
+          }
+        },
+        {
+          "name": "List Tracks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/tracks"
+          }
+        },
+        {
+          "name": "Track Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/tracks/cloud"
+          }
+        },
+        {
+          "name": "Track Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/tracks/cloud/courses"
+          }
+        },
+        {
+          "name": "Explore By Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/explore/cloud"
+          }
+        },
+        {
+          "name": "Search Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{catalog_base}}/api/catalog/explore/search?q=aws&difficulty=Intermediate&page=0&size=12",
+              "host": ["{{catalog_base}}"],
+              "path": ["api", "catalog", "explore", "search"],
+              "query": [
+                { "key": "q", "value": "aws" },
+                { "key": "difficulty", "value": "Intermediate" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "12" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/categories"
+          }
+        },
+        {
+          "name": "Public Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/stats/public"
+          }
+        },
+        {
+          "name": "FAQ",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/faq"
+          }
+        },
+        {
+          "name": "Testimonials",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/testimonials"
+          }
+        },
+        {
+          "name": "How It Works",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{catalog_base}}/api/catalog/how-it-works"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Mentor Service (8084)",
+      "item": [
+        {
+          "name": "List Mentors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mentor_base}}/api/mentors"
+          }
+        },
+        {
+          "name": "Mentor By Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mentor_base}}/api/mentors/arjan-singh"
+          }
+        },
+        {
+          "name": "Mentor Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mentor_base}}/api/mentors/arjan-singh/courses"
+          }
+        },
+        {
+          "name": "Mentor Reviews Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mentor_base}}/api/mentors/arjan-singh/reviews"
+          }
+        },
+        {
+          "name": "My Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+            ],
+            "url": "{{mentor_base}}/api/mentors/me/dashboard"
+          }
+        },
+        {
+          "name": "My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+            ],
+            "url": "{{mentor_base}}/api/mentors/me/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-User-Id", "value": "{{mentor_user_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Updated bio — 10+ years building distributed systems.\",\n  \"longBio\": \"Updated long bio with more mentorship focus.\",\n  \"location\": \"San Francisco, CA\",\n  \"available\": true,\n  \"specialties\": [\"System Design\", \"Go\", \"Kubernetes\"]\n}"
+            },
+            "url": "{{mentor_base}}/api/mentors/me/profile"
+          }
+        },
+        {
+          "name": "My Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+            ],
+            "url": "{{mentor_base}}/api/mentors/me/students"
+          }
+        },
+        {
+          "name": "Student Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+            ],
+            "url": "{{mentor_base}}/api/mentors/me/students/201"
+          }
+        },
+        {
+          "name": "Notifications Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+            ],
+            "url": "{{mentor_base}}/api/mentors/me/notifications-count"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Review Service (8091)",
+      "item": [
+        {
+          "name": "Course Reviews List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{review_base}}/api/reviews/courses/2?page=0&size=10",
+              "host": ["{{review_base}}"],
+              "path": ["api", "reviews", "courses", "2"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Course Rating Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{review_base}}/api/reviews/courses/2/summary"
+          }
+        },
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-User-Id", "value": "{{student_user_id_2}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Modern JS is fantastic\",\n  \"body\": \"Clear explanations on ES6+, async patterns, and project structure.\",\n  \"reviewerName\": \"Rohan Mehta\"\n}"
+            },
+            "url": "{{review_base}}/api/reviews/courses/3"
+          }
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "X-User-Id", "value": "{{student_user_id}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Excellent deep dive into Azure AI (updated)\",\n  \"body\": \"Even better after the new RAG module was added.\",\n  \"reviewerName\": \"Priya Verma\"\n}"
+            },
+            "url": "{{review_base}}/api/reviews/1"
+          }
+        },
+        {
+          "name": "Mark Review Helpful",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-User-Id", "value": "999" }
+            ],
+            "url": "{{review_base}}/api/reviews/1/helpful"
+          }
+        },
+        {
+          "name": "My Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "{{student_user_id}}" }
+            ],
+            "url": "{{review_base}}/api/reviews/me"
+          }
+        },
+        {
+          "name": "Mentor Course Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+            ],
+            "url": {
+              "raw": "{{review_base}}/api/reviews/mentor/me?courseIds=1&courseIds=2",
+              "host": ["{{review_base}}"],
+              "path": ["api", "reviews", "mentor", "me"],
+              "query": [
+                { "key": "courseIds", "value": "1" },
+                { "key": "courseIds", "value": "2" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "X-User-Id", "value": "{{student_user_id}}" }
+            ],
+            "url": "{{review_base}}/api/reviews/3"
+          }
+        }
+      ]
+    }
+  ]
+}

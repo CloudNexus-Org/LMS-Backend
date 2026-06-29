@@ -1,0 +1,31 @@
+server:
+  port: 8091
+
+spring:
+  application:
+    name: review-service
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:15432}/lms_reviews
+    username: ${POSTGRES_USER:lms_admin}
+    password: ${POSTGRES_PASSWORD:lms_secret}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+    enabled: ${EUREKA_ENABLED:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

@@ -49,7 +49,7 @@ services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "5432:5432"
+      - "15432:5432"
     environment:
       POSTGRES_USER: lms_admin
       POSTGRES_PASSWORD: lms_secret
@@ -73,6 +73,63 @@ services:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       SPRING_DATA_REDIS_HOST: redis
+    networks:
+      - lms-network
+
+  catalog-service:
+    build:
+      context: .
+      dockerfile: catalog-service/Dockerfile
+    ports:
+      - "8083:8083"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  mentor-service:
+    build:
+      context: .
+      dockerfile: mentor-service/Dockerfile
+    ports:
+      - "8084:8084"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  review-service:
+    build:
+      context: .
+      dockerfile: review-service/Dockerfile
+    ports:
+      - "8091:8091"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_ENABLED: "false"
     networks:
       - lms-network
 
