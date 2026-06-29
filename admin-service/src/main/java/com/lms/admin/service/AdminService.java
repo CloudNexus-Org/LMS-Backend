@@ -6,10 +6,14 @@ import com.lms.admin.model.*;
 import com.lms.admin.repository.*;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -19,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class AdminService {
 
@@ -33,6 +38,11 @@ public class AdminService {
     private final MentorPayoutRepository mentorPayoutRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final AdminEventProducer eventProducer;
+
+    @Value("${lms.catalog-service-url}")
+    private String catalogServiceUrl;
+
+    private final RestClient restClient = RestClient.create();
 
     public void requireAdmin(String role) {
         if (role == null || !ADMIN_ROLE.equalsIgnoreCase(role.trim())) {
@@ -57,6 +67,41 @@ public class AdminService {
     }
 
     @Transactional
+    public void createPendingApproval(Map<String, Object> event) {
+        String courseCode = stringVal(event.get("courseCode"));
+        if (courseCode == null || courseCode.isBlank()) {
+            log.warn("course.submitted missing courseCode: {}", event);
+            return;
+        }
+        if (courseApprovalRepository.existsById(courseCode)) {
+            log.info("Approval already exists for {}", courseCode);
+            return;
+        }
+
+        CourseApproval approval = CourseApproval.builder()
+                .courseId(courseCode)
+                .title(stringVal(event.get("title")))
+                .mentor(stringVal(event.get("mentorName")))
+                .mentorAvatar(stringVal(event.get("mentorAvatar")))
+                .category(stringVal(event.get("category")))
+                .submitted("Just now")
+                .modules(intVal(event.get("modules")))
+                .lessons(intVal(event.get("lessons")))
+                .duration(stringVal(event.get("duration")))
+                .previewRating(0.0)
+                .thumbnail(stringVal(event.get("thumbnail")))
+                .status("Pending")
+                .priority(stringVal(event.get("priority")))
+                .description(stringVal(event.get("description")))
+                .mentorId(longVal(event.get("mentorId")))
+                .submittedAt(Instant.now())
+                .build();
+
+        courseApprovalRepository.save(approval);
+        log.info("Created pending approval for course {}", courseCode);
+    }
+
+    @Transactional
     public CourseApprovalResponse approveCourse(String courseId, Long adminId) {
         CourseApproval approval = findApproval(courseId);
         if (!"Pending".equalsIgnoreCase(approval.getStatus())) {
@@ -69,6 +114,7 @@ public class AdminService {
         courseApprovalRepository.save(approval);
 
         Long numericCourseId = parseNumericCourseId(courseId);
+        syncPublishToCatalog(numericCourseId);
         eventProducer.publishCourseApproved(courseId, numericCourseId, approval.getMentorId(), approval.getTitle());
         audit(adminId, "APPROVE_COURSE", "course_approval", courseId,
                 "Approved course: " + approval.getTitle());
@@ -301,6 +347,23 @@ public class AdminService {
         return Long.parseLong(digits);
     }
 
+    private void syncPublishToCatalog(Long courseId) {
+        if (courseId == null) {
+            log.warn("Cannot sync publish — missing numeric course id");
+            return;
+        }
+        try {
+            restClient.post()
+                    .uri(catalogServiceUrl + "/api/catalog/internal/courses/" + courseId + "/publish")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .toBodilessEntity();
+            log.info("Synced publish to catalog for course id={}", courseId);
+        } catch (Exception ex) {
+            log.warn("Catalog sync publish failed (Kafka consumer may still process): {}", ex.getMessage());
+        }
+    }
+
     private void audit(Long adminId, String action, String entity, String entityId, String details) {
         adminAuditLogRepository.save(AdminAuditLog.builder()
                 .adminId(adminId)
@@ -349,5 +412,19 @@ public class AdminService {
 
     private static Map<String, Object> geoRegion(String region, int pct, String color) {
         return Map.of("region", region, "pct", pct, "color", color);
+    }
+
+    private static String stringVal(Object value) {
+        return value != null ? value.toString() : null;
+    }
+
+    private static Integer intVal(Object value) {
+        if (value == null) return 0;
+        return Integer.valueOf(value.toString());
+    }
+
+    private static Long longVal(Object value) {
+        if (value == null) return null;
+        return Long.valueOf(value.toString());
     }
 }
