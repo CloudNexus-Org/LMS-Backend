@@ -18,6 +18,11 @@
     </parent>
 
     <modules>
+        <module>eureka-server</module>
+        <module>api-gateway</module>
+        <module>auth-service</module>
+        <module>user-service</module>
+        <module>admin-service</module>
         <module>catalog-service</module>
         <module>mentor-service</module>
         <module>review-service</module>

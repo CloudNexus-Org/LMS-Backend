@@ -1,0 +1,77 @@
+{
+  "dev": "Dev 1 — Platform & Identity",
+  "services": {
+    "eureka-server": { "port": 8761, "apis": 0 },
+    "api-gateway": { "port": 8080, "apis": 0 },
+    "auth-service": { "port": 8081, "apis": 12, "database": "lms_auth" },
+    "user-service": { "port": 8082, "apis": 14, "database": "lms_users" },
+    "admin-service": { "port": 8094, "apis": 12, "database": "lms_admin" }
+  },
+  "seedCredentials": {
+    "admin": { "email": "admin@cloudnexus.com", "password": "Password123!", "role": "ADMIN" },
+    "mentor": { "email": "arjan@cloudnexus.com", "password": "Password123!", "role": "MENTOR" },
+    "student": { "email": "alex.chen@example.com", "password": "Password123!", "role": "STUDENT" }
+  },
+  "frontendMapping": {
+    "login": "POST /api/auth/login → { accessToken, refreshToken, user: { id, email, fullName, role, username } }",
+    "signup": "POST /api/auth/register → { fullName, email, password }",
+    "forgotPassword": "POST /api/auth/forgot-password",
+    "verifyOtp": "POST /api/auth/verify-otp",
+    "adminUsers": "GET /api/users (X-User-Role: ADMIN)",
+    "addMentor": "POST /api/users/mentors",
+    "courseApprovals": "GET /api/admin/approvals/courses",
+    "financials": "GET /api/admin/financials/summary",
+    "systemSettings": "PUT /api/admin/settings"
+  },
+  "sampleRequests": {
+    "register": {
+      "method": "POST",
+      "url": "http://localhost:8081/api/auth/register",
+      "body": { "fullName": "Priya Verma", "email": "priya@example.com", "password": "Password123!" }
+    },
+    "login": {
+      "method": "POST",
+      "url": "http://localhost:8081/api/auth/login",
+      "body": { "email": "admin@cloudnexus.com", "password": "Password123!", "rememberMe": false }
+    },
+    "updateProfile": {
+      "method": "PUT",
+      "url": "http://localhost:8082/api/users/profile",
+      "headers": { "X-User-Id": "1" },
+      "body": { "fullName": "Alex Chen", "bio": "Backend learner", "phone": "+91-9876543210", "location": "Mumbai" }
+    },
+    "addMentor": {
+      "method": "POST",
+      "url": "http://localhost:8082/api/users/mentors",
+      "headers": { "X-User-Role": "ADMIN" },
+      "body": {
+        "fullName": "Dr. New Mentor",
+        "username": "newmentor",
+        "email": "mentor.new@cloudnexus.com",
+        "password": "Password123!",
+        "professionalRole": "Principal Engineer",
+        "company": "Cloud Nexus",
+        "trackLabel": "Cloud & DevOps",
+        "location": "Bangalore",
+        "bio": "Teaching cloud architecture."
+      }
+    },
+    "approveCourse": {
+      "method": "POST",
+      "url": "http://localhost:8094/api/admin/approvals/courses/C-8291/approve",
+      "headers": { "X-User-Id": "4", "X-User-Role": "ADMIN" }
+    },
+    "updateSettings": {
+      "method": "PUT",
+      "url": "http://localhost:8094/api/admin/settings",
+      "headers": { "X-User-Id": "4", "X-User-Role": "ADMIN" },
+      "body": {
+        "platformName": "Cloud Nexus",
+        "commissionPct": 30,
+        "gstRate": 0.18,
+        "currency": "INR",
+        "supportEmail": "support@cloudnexus.com"
+      }
+    }
+  }
+}

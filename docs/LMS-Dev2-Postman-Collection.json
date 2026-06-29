@@ -1,17 +1,41 @@
 {
   "info": {
     "_postman_id": "lms-dev2-catalog-mentor-review",
-    "name": "LMS Dev2 — Catalog, Mentor, Review",
+    "name": "LMS Dev2 \u2014 Catalog, Mentor, Review",
     "description": "All 34 APIs for catalog-service (8083), mentor-service (8084), review-service (8091).\n\nAuth: use X-User-Id header until auth-service is ready.\nMentor userId: 101 (arjan-singh) | Student userId: 201, 301",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "catalog_base", "value": "http://localhost:8083" },
-    { "key": "mentor_base", "value": "http://localhost:8084" },
-    { "key": "review_base", "value": "http://localhost:8091" },
-    { "key": "mentor_user_id", "value": "101" },
-    { "key": "student_user_id", "value": "201" },
-    { "key": "student_user_id_2", "value": "301" }
+    {
+      "key": "catalog_base",
+      "value": "http://localhost:8083",
+      "type": "string"
+    },
+    {
+      "key": "mentor_base",
+      "value": "http://localhost:8084",
+      "type": "string"
+    },
+    {
+      "key": "review_base",
+      "value": "http://localhost:8091",
+      "type": "string"
+    },
+    {
+      "key": "mentor_user_id",
+      "value": "101",
+      "type": "string"
+    },
+    {
+      "key": "student_user_id",
+      "value": "201",
+      "type": "string"
+    },
+    {
+      "key": "student_user_id_2",
+      "value": "301",
+      "type": "string"
+    }
   ],
   "item": [
     {
@@ -22,7 +46,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/health"
+            "url": "http://localhost:8083/api/catalog/health"
           }
         },
         {
@@ -31,14 +55,32 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{catalog_base}}/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
-              "host": ["{{catalog_base}}"],
-              "path": ["api", "catalog", "courses"],
+              "raw": "http://localhost:8083/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
+              "host": [
+                "http://localhost:8083"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "courses"
+              ],
               "query": [
-                { "key": "page", "value": "0" },
-                { "key": "size", "value": "12" },
-                { "key": "difficulty", "value": "Intermediate" },
-                { "key": "sort", "value": "rating" }
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                },
+                {
+                  "key": "difficulty",
+                  "value": "Intermediate"
+                },
+                {
+                  "key": "sort",
+                  "value": "rating"
+                }
               ]
             }
           }
@@ -48,7 +90,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/courses/featured"
+            "url": "http://localhost:8083/api/catalog/courses/featured"
           }
         },
         {
@@ -56,7 +98,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/courses/filters"
+            "url": "http://localhost:8083/api/catalog/courses/filters"
           }
         },
         {
@@ -64,7 +106,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/courses/aws-solution-architect"
+            "url": "http://localhost:8083/api/catalog/courses/aws-solution-architect"
           }
         },
         {
@@ -72,7 +114,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/courses/aws-solution-architect/preview"
+            "url": "http://localhost:8083/api/catalog/courses/aws-solution-architect/preview"
           }
         },
         {
@@ -80,7 +122,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/tracks"
+            "url": "http://localhost:8083/api/catalog/tracks"
           }
         },
         {
@@ -88,7 +130,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/tracks/cloud"
+            "url": "http://localhost:8083/api/catalog/tracks/cloud"
           }
         },
         {
@@ -96,7 +138,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/tracks/cloud/courses"
+            "url": "http://localhost:8083/api/catalog/tracks/cloud/courses"
           }
         },
         {
@@ -104,7 +146,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/explore/cloud"
+            "url": "http://localhost:8083/api/catalog/explore/cloud"
           }
         },
         {
@@ -113,14 +155,33 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{catalog_base}}/api/catalog/explore/search?q=aws&difficulty=Intermediate&page=0&size=12",
-              "host": ["{{catalog_base}}"],
-              "path": ["api", "catalog", "explore", "search"],
+              "raw": "http://localhost:8083/api/catalog/explore/search?q=aws&difficulty=Intermediate&page=0&size=12",
+              "host": [
+                "http://localhost:8083"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "explore",
+                "search"
+              ],
               "query": [
-                { "key": "q", "value": "aws" },
-                { "key": "difficulty", "value": "Intermediate" },
-                { "key": "page", "value": "0" },
-                { "key": "size", "value": "12" }
+                {
+                  "key": "q",
+                  "value": "aws"
+                },
+                {
+                  "key": "difficulty",
+                  "value": "Intermediate"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
               ]
             }
           }
@@ -130,7 +191,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/categories"
+            "url": "http://localhost:8083/api/catalog/categories"
           }
         },
         {
@@ -138,7 +199,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/stats/public"
+            "url": "http://localhost:8083/api/catalog/stats/public"
           }
         },
         {
@@ -146,7 +207,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/faq"
+            "url": "http://localhost:8083/api/catalog/faq"
           }
         },
         {
@@ -154,7 +215,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/testimonials"
+            "url": "http://localhost:8083/api/catalog/testimonials"
           }
         },
         {
@@ -162,7 +223,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{catalog_base}}/api/catalog/how-it-works"
+            "url": "http://localhost:8083/api/catalog/how-it-works"
           }
         }
       ]
@@ -175,7 +236,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{mentor_base}}/api/mentors"
+            "url": "http://localhost:8084/api/mentors"
           }
         },
         {
@@ -183,7 +244,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{mentor_base}}/api/mentors/arjan-singh"
+            "url": "http://localhost:8084/api/mentors/arjan-singh"
           }
         },
         {
@@ -191,7 +252,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{mentor_base}}/api/mentors/arjan-singh/courses"
+            "url": "http://localhost:8084/api/mentors/arjan-singh/courses"
           }
         },
         {
@@ -199,7 +260,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{mentor_base}}/api/mentors/arjan-singh/reviews"
+            "url": "http://localhost:8084/api/mentors/arjan-singh/reviews"
           }
         },
         {
@@ -207,9 +268,12 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
             ],
-            "url": "{{mentor_base}}/api/mentors/me/dashboard"
+            "url": "http://localhost:8084/api/mentors/me/dashboard"
           }
         },
         {
@@ -217,9 +281,12 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
             ],
-            "url": "{{mentor_base}}/api/mentors/me/profile"
+            "url": "http://localhost:8084/api/mentors/me/profile"
           }
         },
         {
@@ -227,14 +294,20 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "X-User-Id", "value": "{{mentor_user_id}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bio\": \"Updated bio — 10+ years building distributed systems.\",\n  \"longBio\": \"Updated long bio with more mentorship focus.\",\n  \"location\": \"San Francisco, CA\",\n  \"available\": true,\n  \"specialties\": [\"System Design\", \"Go\", \"Kubernetes\"]\n}"
+              "raw": "{\n  \"bio\": \"Updated bio \u2014 10+ years building distributed systems.\",\n  \"longBio\": \"Updated long bio with more mentorship focus.\",\n  \"location\": \"San Francisco, CA\",\n  \"available\": true,\n  \"specialties\": [\"System Design\", \"Go\", \"Kubernetes\"]\n}"
             },
-            "url": "{{mentor_base}}/api/mentors/me/profile"
+            "url": "http://localhost:8084/api/mentors/me/profile"
           }
         },
         {
@@ -242,9 +315,12 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
             ],
-            "url": "{{mentor_base}}/api/mentors/me/students"
+            "url": "http://localhost:8084/api/mentors/me/students"
           }
         },
         {
@@ -252,9 +328,12 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
             ],
-            "url": "{{mentor_base}}/api/mentors/me/students/201"
+            "url": "http://localhost:8084/api/mentors/me/students/201"
           }
         },
         {
@@ -262,9 +341,12 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
             ],
-            "url": "{{mentor_base}}/api/mentors/me/notifications-count"
+            "url": "http://localhost:8084/api/mentors/me/notifications-count"
           }
         }
       ]
@@ -278,12 +360,25 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{review_base}}/api/reviews/courses/2?page=0&size=10",
-              "host": ["{{review_base}}"],
-              "path": ["api", "reviews", "courses", "2"],
+              "raw": "http://localhost:8091/api/reviews/courses/2?page=0&size=10",
+              "host": [
+                "http://localhost:8091"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "courses",
+                "2"
+              ],
               "query": [
-                { "key": "page", "value": "0" },
-                { "key": "size", "value": "10" }
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
               ]
             }
           }
@@ -293,7 +388,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{review_base}}/api/reviews/courses/2/summary"
+            "url": "http://localhost:8091/api/reviews/courses/2/summary"
           }
         },
         {
@@ -301,14 +396,20 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "X-User-Id", "value": "{{student_user_id_2}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "X-User-Id",
+                "value": "301"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"rating\": 5,\n  \"title\": \"Modern JS is fantastic\",\n  \"body\": \"Clear explanations on ES6+, async patterns, and project structure.\",\n  \"reviewerName\": \"Rohan Mehta\"\n}"
             },
-            "url": "{{review_base}}/api/reviews/courses/3"
+            "url": "http://localhost:8091/api/reviews/courses/3"
           }
         },
         {
@@ -316,14 +417,20 @@
           "request": {
             "method": "PUT",
             "header": [
-              { "key": "X-User-Id", "value": "{{student_user_id}}" },
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "X-User-Id",
+                "value": "201"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"rating\": 5,\n  \"title\": \"Excellent deep dive into Azure AI (updated)\",\n  \"body\": \"Even better after the new RAG module was added.\",\n  \"reviewerName\": \"Priya Verma\"\n}"
             },
-            "url": "{{review_base}}/api/reviews/1"
+            "url": "http://localhost:8091/api/reviews/1"
           }
         },
         {
@@ -331,9 +438,12 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "X-User-Id", "value": "999" }
+              {
+                "key": "X-User-Id",
+                "value": "999"
+              }
             ],
-            "url": "{{review_base}}/api/reviews/1/helpful"
+            "url": "http://localhost:8091/api/reviews/1/helpful"
           }
         },
         {
@@ -341,9 +451,12 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "X-User-Id", "value": "{{student_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "201"
+              }
             ],
-            "url": "{{review_base}}/api/reviews/me"
+            "url": "http://localhost:8091/api/reviews/me"
           }
         },
         {
@@ -351,15 +464,31 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "X-User-Id", "value": "{{mentor_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
             ],
             "url": {
-              "raw": "{{review_base}}/api/reviews/mentor/me?courseIds=1&courseIds=2",
-              "host": ["{{review_base}}"],
-              "path": ["api", "reviews", "mentor", "me"],
+              "raw": "http://localhost:8091/api/reviews/mentor/me?courseIds=1&courseIds=2",
+              "host": [
+                "http://localhost:8091"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "mentor",
+                "me"
+              ],
               "query": [
-                { "key": "courseIds", "value": "1" },
-                { "key": "courseIds", "value": "2" }
+                {
+                  "key": "courseIds",
+                  "value": "1"
+                },
+                {
+                  "key": "courseIds",
+                  "value": "2"
+                }
               ]
             }
           }
@@ -369,9 +498,12 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "X-User-Id", "value": "{{student_user_id}}" }
+              {
+                "key": "X-User-Id",
+                "value": "201"
+              }
             ],
-            "url": "{{review_base}}/api/reviews/3"
+            "url": "http://localhost:8091/api/reviews/3"
           }
         }
       ]

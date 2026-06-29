@@ -1,4 +1,4 @@
-package com.lms.catalog.config;
+package com.lms.user.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +15,7 @@ public class WebConfig {
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/api/**")
                         .allowedOrigins("http://localhost:5173", "http://localhost:3000")
-                       .allowedMethods("*")
+                        .allowedMethods("*")
                         .allowedHeaders("*");
             }
         };

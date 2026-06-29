@@ -11,11 +11,11 @@ spring:
           enabled: true
       routes:
         - id: auth-service
-          uri: lb://auth-service
+          uri: ${AUTH_SERVICE_URI:http://localhost:8081}
           predicates:
             - Path=/api/auth/**
         - id: user-service
-          uri: lb://user-service
+          uri: ${USER_SERVICE_URI:http://localhost:8082}
           predicates:
             - Path=/api/users/**
         - id: catalog-service
@@ -63,7 +63,7 @@ spring:
           predicates:
             - Path=/api/analytics/**
         - id: admin-service
-          uri: lb://admin-service
+          uri: ${ADMIN_SERVICE_URI:http://localhost:8094}
           predicates:
             - Path=/api/admin/**
         - id: media-service
@@ -75,3 +75,11 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway

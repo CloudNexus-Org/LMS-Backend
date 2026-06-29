@@ -1,12 +1,12 @@
 server:
-  port: 8081
+  port: 8082
 
 spring:
   application:
-    name: auth-service
+    name: user-service
 
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:15432}/lms_auth
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:15432}/lms_users
     username: ${POSTGRES_USER:lms_admin}
     password: ${POSTGRES_PASSWORD:lms_secret}
 
@@ -21,6 +21,13 @@ spring:
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: user-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -33,20 +40,6 @@ eureka:
 
   instance:
     prefer-ip-address: true
-
-jwt:
-  secret: ${JWT_SECRET:change-me-in-production-use-at-least-32-chars}
-  access-expiry: ${JWT_ACCESS_EXPIRY:15m}
-  refresh-expiry: ${JWT_REFRESH_EXPIRY:7d}
-  remember-me-refresh-expiry: ${JWT_REMEMBER_ME_REFRESH_EXPIRY:30d}
-
-auth:
-  otp:
-    length: 6
-    expiry-minutes: 5
-  login:
-    max-attempts: 5
-    lock-minutes: 15
 
 management:
   endpoints:
