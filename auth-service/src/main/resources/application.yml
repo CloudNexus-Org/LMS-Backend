@@ -4,13 +4,21 @@ server:
 spring:
   application:
     name: auth-service
+
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/lms_auth
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:15432}/lms_auth
     username: ${POSTGRES_USER:lms_admin}
     password: ${POSTGRES_PASSWORD:lms_secret}
+
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
@@ -19,13 +27,26 @@ spring:
 
 eureka:
   client:
+    enabled: false
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+      defaultZone: http://localhost:8761/eureka/
+
+  instance:
+    prefer-ip-address: true
 
 jwt:
-  secret: ${JWT_SECRET:change-me-in-production}
+  secret: ${JWT_SECRET:change-me-in-production-use-at-least-32-chars}
   access-expiry: ${JWT_ACCESS_EXPIRY:15m}
   refresh-expiry: ${JWT_REFRESH_EXPIRY:7d}
+  remember-me-refresh-expiry: ${JWT_REMEMBER_ME_REFRESH_EXPIRY:30d}
+
+auth:
+  otp:
+    length: 6
+    expiry-minutes: 5
+  login:
+    max-attempts: 5
+    lock-minutes: 15
 
 management:
   endpoints:

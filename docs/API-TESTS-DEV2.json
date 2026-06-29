@@ -1,0 +1,226 @@
+{
+  "info": {
+    "title": "Dev 2 APIs — Catalog, Mentor, Review",
+    "baseUrls": {
+      "catalog": "http://localhost:8083",
+      "mentor": "http://localhost:8084",
+      "review": "http://localhost:8091"
+    },
+    "authNote": "Until auth-service is ready, send X-User-Id header for student/mentor endpoints"
+  },
+  "catalogService": {
+    "listCourses": {
+      "method": "GET",
+      "url": "/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
+      "headers": {}
+    },
+    "featuredCourses": {
+      "method": "GET",
+      "url": "/api/catalog/courses/featured"
+    },
+    "courseBySlug": {
+      "method": "GET",
+      "url": "/api/catalog/courses/aws-solution-architect",
+      "expectedFields": ["id", "slug", "title", "professor", "rating", "reviews", "enrolled", "difficulty", "duration", "modules", "lessons", "price", "originalPrice", "outcomes"]
+    },
+    "tracks": {
+      "method": "GET",
+      "url": "/api/catalog/tracks"
+    },
+    "trackDetail": {
+      "method": "GET",
+      "url": "/api/catalog/tracks/cloud"
+    },
+    "trackCourses": {
+      "method": "GET",
+      "url": "/api/catalog/tracks/cloud/courses"
+    },
+    "explore": {
+      "method": "GET",
+      "url": "/api/catalog/explore/cloud"
+    },
+    "search": {
+      "method": "GET",
+      "url": "/api/catalog/explore/search?q=aws&difficulty=Intermediate"
+    },
+    "categories": {
+      "method": "GET",
+      "url": "/api/catalog/categories"
+    },
+    "coursePreview": {
+      "method": "GET",
+      "url": "/api/catalog/courses/aws-solution-architect/preview"
+    },
+    "filters": {
+      "method": "GET",
+      "url": "/api/catalog/courses/filters"
+    },
+    "publicStats": {
+      "method": "GET",
+      "url": "/api/catalog/stats/public"
+    },
+    "faq": {
+      "method": "GET",
+      "url": "/api/catalog/faq"
+    },
+    "testimonials": {
+      "method": "GET",
+      "url": "/api/catalog/testimonials"
+    },
+    "howItWorks": {
+      "method": "GET",
+      "url": "/api/catalog/how-it-works"
+    },
+    "health": {
+      "method": "GET",
+      "url": "/api/catalog/health"
+    }
+  },
+  "mentorService": {
+    "listMentors": {
+      "method": "GET",
+      "url": "/api/mentors"
+    },
+    "mentorBySlug": {
+      "method": "GET",
+      "url": "/api/mentors/arjan-singh",
+      "expectedFields": ["slug", "name", "role", "company", "trackLabel", "avatar", "bio", "longBio", "specialties", "rating", "reviews", "learners", "sessions", "yearsExp", "location", "available", "achievements", "experience", "taughtCourses"]
+    },
+    "mentorCourses": {
+      "method": "GET",
+      "url": "/api/mentors/arjan-singh/courses"
+    },
+    "mentorReviewsSummary": {
+      "method": "GET",
+      "url": "/api/mentors/arjan-singh/reviews"
+    },
+    "dashboard": {
+      "method": "GET",
+      "url": "/api/mentors/me/dashboard",
+      "headers": { "X-User-Id": "101" }
+    },
+    "myProfile": {
+      "method": "GET",
+      "url": "/api/mentors/me/profile",
+      "headers": { "X-User-Id": "101" }
+    },
+    "updateProfile": {
+      "method": "PUT",
+      "url": "/api/mentors/me/profile",
+      "headers": { "X-User-Id": "101", "Content-Type": "application/json" },
+      "body": {
+        "bio": "Updated bio — 10+ years building distributed systems.",
+        "longBio": "Updated long bio with more mentorship focus.",
+        "location": "San Francisco, CA",
+        "available": true,
+        "specialties": ["System Design", "Go", "Kubernetes"]
+      }
+    },
+    "students": {
+      "method": "GET",
+      "url": "/api/mentors/me/students",
+      "headers": { "X-User-Id": "101" }
+    },
+    "studentDetail": {
+      "method": "GET",
+      "url": "/api/mentors/me/students/201",
+      "headers": { "X-User-Id": "101" }
+    },
+    "notificationsCount": {
+      "method": "GET",
+      "url": "/api/mentors/me/notifications-count",
+      "headers": { "X-User-Id": "101" }
+    }
+  },
+  "reviewService": {
+    "courseReviews": {
+      "method": "GET",
+      "url": "/api/reviews/courses/2?page=0&size=10"
+    },
+    "submitReview": {
+      "method": "POST",
+      "url": "/api/reviews/courses/3",
+      "headers": { "X-User-Id": "301", "Content-Type": "application/json" },
+      "body": {
+        "rating": 5,
+        "title": "Modern JS is fantastic",
+        "body": "Clear explanations on ES6+, async patterns, and project structure.",
+        "reviewerName": "Rohan Mehta"
+      }
+    },
+    "updateReview": {
+      "method": "PUT",
+      "url": "/api/reviews/1",
+      "headers": { "X-User-Id": "201", "Content-Type": "application/json" },
+      "body": {
+        "rating": 5,
+        "title": "Excellent deep dive into Azure AI (updated)",
+        "body": "Even better after the new RAG module was added.",
+        "reviewerName": "Priya Verma"
+      }
+    },
+    "markHelpful": {
+      "method": "POST",
+      "url": "/api/reviews/1/helpful",
+      "headers": { "X-User-Id": "999" }
+    },
+    "myReviews": {
+      "method": "GET",
+      "url": "/api/reviews/me",
+      "headers": { "X-User-Id": "201" }
+    },
+    "courseSummary": {
+      "method": "GET",
+      "url": "/api/reviews/courses/2/summary",
+      "expectedResponse": {
+        "courseId": 2,
+        "avgRating": 5.0,
+        "totalReviews": 1,
+        "distribution": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 1 }
+      }
+    },
+    "mentorReviews": {
+      "method": "GET",
+      "url": "/api/reviews/mentor/me?courseIds=1&courseIds=2",
+      "headers": { "X-User-Id": "101" }
+    },
+    "deleteReview": {
+      "method": "DELETE",
+      "url": "/api/reviews/3",
+      "headers": { "X-User-Id": "201" }
+    }
+  },
+  "kafkaEvents": {
+    "review.created": {
+      "producer": "review-service",
+      "consumer": "catalog-service",
+      "payload": {
+        "reviewId": 1,
+        "courseId": 2,
+        "avgRating": 5.0,
+        "reviewCount": 1
+      }
+    },
+    "review.updated": {
+      "producer": "review-service",
+      "payload": {
+        "reviewId": 1,
+        "courseId": 2,
+        "avgRating": 4.8,
+        "reviewCount": 2
+      }
+    },
+    "mentor.profile-updated": {
+      "producer": "mentor-service",
+      "payload": {
+        "mentorId": 1,
+        "slug": "arjan-singh"
+      }
+    },
+    "course.approved": {
+      "producer": "admin-service",
+      "consumer": "catalog-service",
+      "payload": { "courseId": 8 }
+    }
+  }
+}

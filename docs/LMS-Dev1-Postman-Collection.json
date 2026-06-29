@@ -1,0 +1,887 @@
+{
+  "info": {
+    "name": "LMS Dev1 \u2014 Platform & Identity (38 APIs)",
+    "description": "Complete Postman collection for Dev 1 microservices.\n\n**Services:**\n- eureka-server (8761) \u2014 service discovery\n- api-gateway (8080) \u2014 single entry point\n- auth-service (8081) \u2014 12 APIs\n- user-service (8082) \u2014 14 APIs\n- admin-service (8094) \u2014 12 APIs\n\n**Seed credentials:**\n- Admin: admin@cloudnexus.com / Password123!\n- Mentor: arjan@cloudnexus.com / Password123!\n- Student: alex.chen@example.com / Password123!\n\n**How to use:**\n1. Start all services (see README)\n2. Run **Login (admin)** first \u2014 tokens auto-save to collection variables\n3. Test remaining requests in order\n\n**IMPORTANT \u2014 Postman setup:**\n1. Import `LMS-Dev1-Postman-Environment.json` from the same folder\n2. Top-right dropdown \u2192 select **LMS Dev1 \u2014 Local** (not 'No environment')\n3. Run **03 Login (admin)** first to save tokens\nService URLs are also hardcoded as localhost fallbacks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "authUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "userUrl",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "adminUrl",
+      "value": "http://localhost:8094",
+      "type": "string"
+    },
+    {
+      "key": "gatewayUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "eurekaUrl",
+      "value": "http://localhost:8761",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminUserId",
+      "value": "4",
+      "type": "string"
+    },
+    {
+      "key": "studentUserId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Infrastructure",
+      "item": [
+        {
+          "name": "Eureka Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8761/actuator/health"
+          }
+        },
+        {
+          "name": "Gateway Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/actuator/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Auth Health (via Eureka)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/api/auth/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 User Health (via Eureka)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/api/users/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Admin Health (via Eureka)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8080/api/admin/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Auth Service (12)",
+      "item": [
+        {
+          "name": "01 Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8081/api/auth/health"
+          }
+        },
+        {
+          "name": "02 Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Priya Verma\",\n  \"email\": \"priya.new@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/register"
+          }
+        },
+        {
+          "name": "03 Login (admin) \u2b50 run first",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "  if (json.user && json.user.id) {",
+                  "    pm.collectionVariables.set('adminUserId', String(json.user.id));",
+                  "  }",
+                  "  pm.test('Login OK + tokens saved', () => {",
+                  "    pm.expect(json.accessToken).to.be.a('string');",
+                  "  });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@cloudnexus.com\",\n  \"password\": \"Password123!\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "http://localhost:8081/api/auth/login"
+          }
+        },
+        {
+          "name": "04 Login (student)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"password\": \"Password123!\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "http://localhost:8081/api/auth/login"
+          }
+        },
+        {
+          "name": "05 Me (current user)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "http://localhost:8081/api/auth/me"
+          }
+        },
+        {
+          "name": "06 Validate Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{accessToken}}\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/validate-token"
+          }
+        },
+        {
+          "name": "07 Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/refresh-token"
+          }
+        },
+        {
+          "name": "08 Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex.chen@example.com\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/forgot-password"
+          }
+        },
+        {
+          "name": "09 Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"code\": \"REPLACE_WITH_OTP_FROM_DB\",\n  \"purpose\": \"PASSWORD_RESET\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/verify-otp"
+          }
+        },
+        {
+          "name": "10 Resend OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"purpose\": \"PASSWORD_RESET\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/resend-otp"
+          }
+        },
+        {
+          "name": "11 Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alex.chen@example.com\",\n  \"code\": \"REPLACE_WITH_OTP_FROM_DB\",\n  \"purpose\": \"PASSWORD_RESET\",\n  \"newPassword\": \"Password123!\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/reset-password"
+          }
+        },
+        {
+          "name": "12 Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"Password123!\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/change-password"
+          }
+        },
+        {
+          "name": "13 Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "http://localhost:8081/api/auth/logout"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. User Service (14)",
+      "item": [
+        {
+          "name": "01 Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8082/api/users/health"
+          }
+        },
+        {
+          "name": "02 Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              }
+            ],
+            "url": "http://localhost:8082/api/users/profile"
+          }
+        },
+        {
+          "name": "03 Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Alex Chen\",\n  \"bio\": \"Backend learner\",\n  \"phone\": \"+91-9876543210\",\n  \"location\": \"Mumbai\"\n}"
+            },
+            "url": "http://localhost:8082/api/users/profile"
+          }
+        },
+        {
+          "name": "04 Update Avatar",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"avatarUrl\": \"https://randomuser.me/api/portraits/men/32.jpg\"\n}"
+            },
+            "url": "http://localhost:8082/api/users/profile/avatar"
+          }
+        },
+        {
+          "name": "05 Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              }
+            ],
+            "url": "http://localhost:8082/api/users/profile/settings"
+          }
+        },
+        {
+          "name": "06 Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"theme\": \"dark\",\n  \"language\": \"en\",\n  \"emailNotifications\": true,\n  \"pushNotifications\": false\n}"
+            },
+            "url": "http://localhost:8082/api/users/profile/settings"
+          }
+        },
+        {
+          "name": "07 List Users (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8082/api/users?page=0&size=20"
+          }
+        },
+        {
+          "name": "08 Get User by ID (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8082/api/users/1"
+          }
+        },
+        {
+          "name": "09 Create User (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"new.user@example.com\",\n  \"fullName\": \"New User\",\n  \"role\": \"STUDENT\"\n}"
+            },
+            "url": "http://localhost:8082/api/users"
+          }
+        },
+        {
+          "name": "10 Update User (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Alex Chen\",\n  \"bio\": \"Updated by admin\"\n}"
+            },
+            "url": "http://localhost:8082/api/users/1"
+          }
+        },
+        {
+          "name": "11 Ban/Unban User (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACTIVE\"\n}"
+            },
+            "url": "http://localhost:8082/api/users/5/status"
+          }
+        },
+        {
+          "name": "12 Delete User (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8082/api/users/99"
+          }
+        },
+        {
+          "name": "13 Add Mentor (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dr. New Mentor\",\n  \"username\": \"newmentor\",\n  \"email\": \"mentor.new@cloudnexus.com\",\n  \"password\": \"Password123!\",\n  \"professionalRole\": \"Principal Engineer\",\n  \"company\": \"Cloud Nexus\",\n  \"trackLabel\": \"Cloud & DevOps\",\n  \"location\": \"Bangalore\",\n  \"bio\": \"Teaching cloud architecture.\"\n}"
+            },
+            "url": "http://localhost:8082/api/users/mentors"
+          }
+        },
+        {
+          "name": "14 List Mentors (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8082/api/users/mentors"
+          }
+        },
+        {
+          "name": "15 Student Summary (mentor/admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8082/api/users/students/1/summary"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Admin Service (12)",
+      "item": [
+        {
+          "name": "01 Health",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8094/api/admin/health"
+          }
+        },
+        {
+          "name": "02 Pending Approvals",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/approvals/courses?status=Pending"
+          }
+        },
+        {
+          "name": "03 Approval Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/approvals/courses/C-8292"
+          }
+        },
+        {
+          "name": "04 Approve Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/approvals/courses/C-8292/approve"
+          }
+        },
+        {
+          "name": "05 Reject Course",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Needs more hands-on labs and clearer module structure.\"\n}"
+            },
+            "url": "http://localhost:8094/api/admin/approvals/courses/C-8290/reject"
+          }
+        },
+        {
+          "name": "06 Financial Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/financials/summary"
+          }
+        },
+        {
+          "name": "07 Transactions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/financials/transactions"
+          }
+        },
+        {
+          "name": "08 Mentor Payouts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/financials/payouts"
+          }
+        },
+        {
+          "name": "09 Process Payout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mentorId\": 2,\n  \"amount\": 1500,\n  \"period\": \"2026-06\"\n}"
+            },
+            "url": "http://localhost:8094/api/admin/financials/payouts"
+          }
+        },
+        {
+          "name": "10 Get Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/settings"
+          }
+        },
+        {
+          "name": "11 Update Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platformName\": \"Cloud Nexus\",\n  \"commissionPct\": 30,\n  \"gstRate\": 0.18,\n  \"currency\": \"INR\",\n  \"supportEmail\": \"support@cloudnexus.com\"\n}"
+            },
+            "url": "http://localhost:8094/api/admin/settings"
+          }
+        },
+        {
+          "name": "12 Platform Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8094/api/admin/reports/platform"
+          }
+        },
+        {
+          "name": "13 Generate Report",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reportType\": \"financial\",\n  \"fromDate\": \"2026-01-01\",\n  \"toDate\": \"2026-06-30\"\n}"
+            },
+            "url": "http://localhost:8094/api/admin/reports/generate"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Gateway Routes (via port 8080)",
+      "item": [
+        {
+          "name": "Login via Gateway",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@cloudnexus.com\",\n  \"password\": \"Password123!\",\n  \"rememberMe\": false\n}"
+            },
+            "url": "http://localhost:8080/api/auth/login"
+          }
+        },
+        {
+          "name": "Get Profile via Gateway",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "1"
+              }
+            ],
+            "url": "http://localhost:8080/api/users/profile"
+          }
+        },
+        {
+          "name": "Pending Approvals via Gateway",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "4"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ],
+            "url": "http://localhost:8080/api/admin/approvals/courses?status=Pending"
+          }
+        }
+      ]
+    }
+  ]
+}

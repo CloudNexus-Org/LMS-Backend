@@ -22,19 +22,10 @@
         <module>api-gateway</module>
         <module>auth-service</module>
         <module>user-service</module>
+        <module>admin-service</module>
         <module>catalog-service</module>
         <module>mentor-service</module>
-        <module>content-service</module>
-        <module>enrollment-service</module>
-        <module>learning-service</module>
-        <module>assessment-service</module>
-        <module>payment-service</module>
-        <module>certificate-service</module>
         <module>review-service</module>
-        <module>notification-service</module>
-        <module>analytics-service</module>
-        <module>admin-service</module>
-        <module>media-service</module>
     </modules>
 
     <properties>
