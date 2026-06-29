@@ -1,0 +1,77 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: catalog-service
+          uri: lb://catalog-service
+          predicates:
+            - Path=/api/catalog/**
+        - id: mentor-service
+          uri: lb://mentor-service
+          predicates:
+            - Path=/api/mentors/**
+        - id: content-service
+          uri: lb://content-service
+          predicates:
+            - Path=/api/content/**
+        - id: enrollment-service
+          uri: lb://enrollment-service
+          predicates:
+            - Path=/api/enrollments/**
+        - id: learning-service
+          uri: lb://learning-service
+          predicates:
+            - Path=/api/learning/**
+        - id: assessment-service
+          uri: lb://assessment-service
+          predicates:
+            - Path=/api/assessment/**
+        - id: payment-service
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/payments/**
+        - id: certificate-service
+          uri: lb://certificate-service
+          predicates:
+            - Path=/api/certificates/**
+        - id: review-service
+          uri: lb://review-service
+          predicates:
+            - Path=/api/reviews/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**
+        - id: analytics-service
+          uri: lb://analytics-service
+          predicates:
+            - Path=/api/analytics/**
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/api/admin/**
+        - id: media-service
+          uri: lb://media-service
+          predicates:
+            - Path=/api/media/**
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

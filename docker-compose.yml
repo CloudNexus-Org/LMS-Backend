@@ -1,0 +1,84 @@
+version: "3.9"
+
+services:
+  # ─── Service Discovery ───
+  eureka-server:
+    build: ./eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - lms-network
+
+  # ─── Kafka ───
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - lms-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - lms-network
+
+  # ─── Redis (cache + session) ───
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - lms-network
+
+  # ─── PostgreSQL (one instance, separate DBs per service) ───
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      POSTGRES_DB: lms_platform
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - lms-network
+
+  # ─── API Gateway ───
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - kafka
+      - redis
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+    networks:
+      - lms-network
+
+volumes:
+  postgres_data:
+
+networks:
+  lms-network:
+    driver: bridge
