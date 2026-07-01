@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "lms-full-collection-v2",
-    "name": "LMS",
-    "description": "Complete LMS API collection — all microservices via **API Gateway**.\n\n**Base URL:** `{{baseUrl}}` → `http://localhost:8080` (import LMS-Postman-Environment.json)\n\nRun **Auth → 03 Login (admin)** first to set `accessToken` / `refreshToken`.\n\n| Route | Gateway path |\n|-------|-------------|\n| Auth | /api/auth/** |\n| User | /api/users/** |\n| Catalog | /api/catalog/** |\n| Mentor | /api/mentors/** |\n| Review | /api/reviews/** |\n| Admin | /api/admin/** |\n\n**Seed login:** admin@cloudnexus.com / Password123!\n**Mentor login:** arjan@cloudnexus.com / Password123!\n**Headers:** Admin APIs → X-User-Role: ADMIN, X-User-Id: 1",
+    "name": "LMS \u2014 15 Services (API Gateway)",
+    "description": "Complete LMS API collection \u2014 **15 services** (Eureka + Gateway + 13 microservices).\n\n**Base URL:** `{{baseUrl}}` \u2192 `http://localhost:8080`\n\n**Quick start**\n1. Run folder **0. Infrastructure** \u2014 all 15 health checks\n2. Run **1. Auth \u2192 03 Login (admin)** \u2014 sets `accessToken`\n3. Use folders **1\u201313** (port order 8081\u21928095)\n\n| # | Service | Port | Gateway |\n|---|---------|------|--------|\n| 0 | Eureka | 8761 | \u2014 |\n| \u2014 | API Gateway | 8080 | `/api/**` |\n| 1 | auth-service | 8081 | `/api/auth/**` |\n| 2 | user-service | 8082 | `/api/users/**` |\n| 3 | catalog-service | 8083 | `/api/catalog/**` |\n| 4 | mentor-service | 8084 | `/api/mentors/**` |\n| 5 | content-service | 8085 | `/api/content/**` |\n| 6 | enrollment-service | 8086 | `/api/enrollments/**` |\n| 7 | learning-service | 8087 | `/api/learning/**` |\n| 8 | certificate-service | 8090 | `/api/certificates/**` |\n| 9 | review-service | 8091 | `/api/reviews/**` |\n| 10 | notification-service | 8092 | `/api/notifications/**` |\n| 11 | analytics-service | 8093 | `/api/analytics/**` |\n| 12 | admin-service | 8094 | `/api/admin/**` |\n| 13 | media-service | 8095 | `/api/media/**` |\n\n**Seed:** admin@cloudnexus.com / Password123! (id=1) \u00b7 arjan@cloudnexus.com (id=2) \u00b7 alex.chen@example.com (id=3)\n**Postgres:** localhost:15432 \u00b7 `lms_admin` / `lms_secret`",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -30,72 +30,353 @@
       "key": "mentorUserId",
       "value": "2",
       "type": "string"
+    },
+    {
+      "key": "studentUserId",
+      "value": "3",
+      "type": "string"
+    },
+    {
+      "key": "notificationId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "contentCourseId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "contentModuleId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "contentLessonId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "mediaFileId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "eurekaUrl",
+      "value": "http://localhost:8761",
+      "type": "string"
+    },
+    {
+      "key": "authServiceUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "userServiceUrl",
+      "value": "http://localhost:8082",
+      "type": "string"
+    },
+    {
+      "key": "catalogServiceUrl",
+      "value": "http://localhost:8083",
+      "type": "string"
+    },
+    {
+      "key": "mentorServiceUrl",
+      "value": "http://localhost:8084",
+      "type": "string"
+    },
+    {
+      "key": "contentServiceUrl",
+      "value": "http://localhost:8085",
+      "type": "string"
+    },
+    {
+      "key": "enrollmentServiceUrl",
+      "value": "http://localhost:8086",
+      "type": "string"
+    },
+    {
+      "key": "learningServiceUrl",
+      "value": "http://localhost:8087",
+      "type": "string"
+    },
+    {
+      "key": "certificateServiceUrl",
+      "value": "http://localhost:8090",
+      "type": "string"
+    },
+    {
+      "key": "reviewServiceUrl",
+      "value": "http://localhost:8091",
+      "type": "string"
+    },
+    {
+      "key": "notificationServiceUrl",
+      "value": "http://localhost:8092",
+      "type": "string"
+    },
+    {
+      "key": "analyticsServiceUrl",
+      "value": "http://localhost:8093",
+      "type": "string"
+    },
+    {
+      "key": "adminServiceUrl",
+      "value": "http://localhost:8094",
+      "type": "string"
+    },
+    {
+      "key": "mediaServiceUrl",
+      "value": "http://localhost:8095",
+      "type": "string"
+    },
+    {
+      "key": "learningSessionId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "learningNoteId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "learningBookmarkId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "lessonId",
+      "value": "1001",
+      "type": "string"
+    },
+    {
+      "key": "courseId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "reviewId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "enrollmentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "certificateId",
+      "value": "CN-AWSA-8412",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "0. Infrastructure",
+      "name": "0. Infrastructure \u2014 15 Services Health",
+      "description": "Eureka (8761), API Gateway (8080), and all 13 microservices. Run this folder to verify the full stack is UP.",
       "item": [
         {
-          "name": "Eureka Health",
+          "name": "Eureka Health (8761)",
           "request": {
             "method": "GET",
-            "url": "http://localhost:8761/actuator/health"
+            "url": "{{eurekaUrl}}/actuator/health"
           }
         },
         {
-          "name": "Gateway Health",
+          "name": "API Gateway Health (8080)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/actuator/health"
           }
         },
         {
-          "name": "Gateway → Auth Health (via Eureka)",
+          "name": "Gateway \u2192 Auth Service (8081)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/auth/health"
           }
         },
         {
-          "name": "Gateway → User Health (via Eureka)",
+          "name": "Gateway \u2192 User Service (8082)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/users/health"
           }
         },
         {
-          "name": "Gateway → Admin Health (via Eureka)",
-          "request": {
-            "method": "GET",
-            "url": "{{baseUrl}}/api/admin/health"
-          }
-        },
-        {
-          "name": "Gateway → Catalog Health",
+          "name": "Gateway \u2192 Catalog Service (8083)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/catalog/health"
           }
         },
         {
-          "name": "Gateway → Mentor Health",
+          "name": "Gateway \u2192 Mentor Service (8084) \u2014 liveness",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/mentors"
           }
         },
         {
-          "name": "Gateway → Review Health",
+          "name": "Gateway \u2192 Content Service (8085)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/content/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Enrollment Service (8086)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Learning Service (8087)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/learning/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Certificate Service (8090)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certificates/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Review Service (8091) \u2014 liveness",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/api/reviews/courses/1/summary"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Notification Service (8092)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notifications/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Analytics Service (8093)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Admin Service (8094)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/admin/health"
+          }
+        },
+        {
+          "name": "Gateway \u2192 Media Service (8095)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/media/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Auth Service (8081)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8081/api/auth/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 User Service (8082)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8082/api/users/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Catalog Service (8083)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8083/api/catalog/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Mentor Service (8084) \u2014 actuator",
+          "request": {
+            "method": "GET",
+            "url": "{{mentorServiceUrl}}/actuator/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Content Service (8085)",
+          "request": {
+            "method": "GET",
+            "url": "{{contentServiceUrl}}/api/content/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Enrollment Service (8086)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8086/api/enrollments/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Learning Service (8087)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8087/api/learning/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Certificate Service (8090)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8090/api/certificates/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Review Service (8091) \u2014 actuator",
+          "request": {
+            "method": "GET",
+            "url": "{{reviewServiceUrl}}/actuator/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Notification Service (8092)",
+          "request": {
+            "method": "GET",
+            "url": "{{notificationServiceUrl}}/api/notifications/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Analytics Service (8093)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8093/api/analytics/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Admin Service (8094)",
+          "request": {
+            "method": "GET",
+            "url": "http://localhost:8094/api/admin/health"
+          }
+        },
+        {
+          "name": "Direct \u2192 Media Service (8095)",
+          "request": {
+            "method": "GET",
+            "url": "{{mediaServiceUrl}}/api/media/health"
           }
         }
       ]
     },
     {
-      "name": "1. Auth Service (12) — via Gateway",
+      "name": "1. Auth Service (12) \u2014 via Gateway",
       "item": [
         {
           "name": "01 Health",
@@ -122,7 +403,7 @@
           }
         },
         {
-          "name": "03 Login (admin) ⭐ run first",
+          "name": "03 Login (admin) \u2b50 run first",
           "event": [
             {
               "listen": "test",
@@ -368,10 +649,11 @@
             "url": "{{baseUrl}}/api/auth/logout"
           }
         }
-      ]
+      ],
+      "description": "Port **8081**. All requests via API Gateway (`{{baseUrl}}`)."
     },
     {
-      "name": "2. User Service (14) — via Gateway",
+      "name": "2. User Service (14) \u2014 via Gateway",
       "item": [
         {
           "name": "01 Health",
@@ -618,10 +900,2049 @@
             "url": "{{baseUrl}}/api/users/students/1/summary"
           }
         }
+      ],
+      "description": "Port **8082**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "3. Catalog Service (16) \u2014 via Gateway",
+      "item": [
+        {
+          "name": "01 Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/health"
+          }
+        },
+        {
+          "name": "02 List Courses (with filters)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "courses"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                },
+                {
+                  "key": "difficulty",
+                  "value": "Intermediate"
+                },
+                {
+                  "key": "sort",
+                  "value": "rating"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "03 Featured Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/courses/featured"
+          }
+        },
+        {
+          "name": "04 Course Filters",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/courses/filters"
+          }
+        },
+        {
+          "name": "05 Course By Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/courses/aws-solution-architect"
+          }
+        },
+        {
+          "name": "06 Course Preview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/courses/aws-solution-architect/preview"
+          }
+        },
+        {
+          "name": "07 List Tracks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/tracks"
+          }
+        },
+        {
+          "name": "08 Track Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/tracks/cloud"
+          }
+        },
+        {
+          "name": "09 Track Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/tracks/cloud/courses"
+          }
+        },
+        {
+          "name": "10 Explore By Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/explore/cloud"
+          }
+        },
+        {
+          "name": "11 Search Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/catalog/explore/search?q=aws&difficulty=Intermediate&page=0&size=12",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "explore",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "aws"
+                },
+                {
+                  "key": "difficulty",
+                  "value": "Intermediate"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "12"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "12 Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/categories"
+          }
+        },
+        {
+          "name": "13 Public Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/stats/public"
+          }
+        },
+        {
+          "name": "14 FAQ",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/faq"
+          }
+        },
+        {
+          "name": "15 Testimonials",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/testimonials"
+          }
+        },
+        {
+          "name": "16 How It Works",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/catalog/how-it-works"
+          }
+        }
+      ],
+      "description": "Port **8083**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "4. Mentor Service (10) \u2014 via Gateway",
+      "item": [
+        {
+          "name": "List Mentors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/mentors"
+          }
+        },
+        {
+          "name": "Mentor By Slug",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/mentors/arjan-singh"
+          }
+        },
+        {
+          "name": "Mentor Courses",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/mentors/arjan-singh/courses"
+          }
+        },
+        {
+          "name": "Mentor Reviews Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/mentors/arjan-singh/reviews"
+          }
+        },
+        {
+          "name": "My Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
+            ],
+            "url": "{{baseUrl}}/api/mentors/me/dashboard"
+          }
+        },
+        {
+          "name": "My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
+            ],
+            "url": "{{baseUrl}}/api/mentors/me/profile"
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Updated bio \u2014 10+ years building distributed systems.\",\n  \"longBio\": \"Updated long bio with more mentorship focus.\",\n  \"location\": \"San Francisco, CA\",\n  \"available\": true,\n  \"specialties\": [\"System Design\", \"Go\", \"Kubernetes\"]\n}"
+            },
+            "url": "{{baseUrl}}/api/mentors/me/profile"
+          }
+        },
+        {
+          "name": "My Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
+            ],
+            "url": "{{baseUrl}}/api/mentors/me/students"
+          }
+        },
+        {
+          "name": "Student Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
+            ],
+            "url": "{{baseUrl}}/api/mentors/me/students/201"
+          }
+        },
+        {
+          "name": "Notifications Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
+            ],
+            "url": "{{baseUrl}}/api/mentors/me/notifications-count"
+          }
+        }
+      ],
+      "description": "Port **8084**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "5. Content Service (18) \u2014 via Gateway",
+      "description": "Port **8085**. All requests via API Gateway (`{{baseUrl}}`).",
+      "item": [
+        {
+          "name": "01 Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/content/health"
+          }
+        },
+        {
+          "name": "02 Create Course Draft",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('contentCourseId', String(json.id));",
+                  "pm.test('Course created', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Enterprise React Systems \u2014 Full Stack\",\n  \"subtitle\": \"Hooks, context, performance at scale\",\n  \"description\": \"A comprehensive course on building enterprise-grade React applications with modern patterns and testing.\",\n  \"category\": \"Frontend Engineering\",\n  \"level\": \"Advanced\",\n  \"language\": \"English\",\n  \"trackId\": \"frontend\",\n  \"outcomes\": [\"Master advanced hooks\", \"Build scalable state\", \"Ship production apps\"],\n  \"tags\": [\"React\", \"TypeScript\", \"Testing\"],\n  \"requirements\": \"Basic JavaScript and HTML/CSS\"\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses"
+          }
+        },
+        {
+          "name": "03 Update Course Info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subtitle\": \"Updated subtitle from Postman\"\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}"
+          }
+        },
+        {
+          "name": "04 Get Course (Mentor)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}"
+          }
+        },
+        {
+          "name": "05 Add Module",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j=pm.response.json(); if(j.id) pm.collectionVariables.set('contentModuleId', String(j.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Module 1 \u2014 Foundations\",\n  \"description\": \"Core concepts and setup\"\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/modules"
+          }
+        },
+        {
+          "name": "06 Update Module",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Module 1 \u2014 Foundations (Updated)\"\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/modules/{{contentModuleId}}"
+          }
+        },
+        {
+          "name": "07 Add Lesson",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j=pm.response.json(); if(j.id) pm.collectionVariables.set('contentLessonId', String(j.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Introduction to React Architecture\",\n  \"type\": \"video\",\n  \"durationMin\": 12,\n  \"previewFree\": true,\n  \"summary\": \"Overview of component architecture\"\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/modules/{{contentModuleId}}/lessons"
+          }
+        },
+        {
+          "name": "08 Update Lesson",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"summary\": \"Updated lesson summary\"\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/lessons/{{contentLessonId}}"
+          }
+        },
+        {
+          "name": "09 Reorder Curriculum",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"modules\": [\n    {\n      \"moduleId\": {{contentModuleId}},\n      \"orderIndex\": 0,\n      \"lessons\": [{ \"lessonId\": {{contentLessonId}}, \"orderIndex\": 0 }]\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/curriculum/reorder"
+          }
+        },
+        {
+          "name": "10 Update Pricing",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pricingPlan\": \"paid\",\n  \"price\": 19999\n}"
+            },
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/pricing"
+          }
+        },
+        {
+          "name": "11 Submit for Approval",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/submit-for-approval"
+          }
+        },
+        {
+          "name": "12 List Mentor Drafts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/content/courses/drafts"
+          }
+        },
+        {
+          "name": "13 Track Lessons (Student Player)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/content/tracks/cloud/lessons"
+          }
+        },
+        {
+          "name": "14 Lesson Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/content/lessons/{{contentLessonId}}"
+          }
+        },
+        {
+          "name": "15 Lesson Resources",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/content/lessons/1/resources"
+          }
+        },
+        {
+          "name": "16 Lesson Transcript",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/content/lessons/1/transcript"
+          }
+        },
+        {
+          "name": "17 Publish Course (approved seed id=3)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/content/courses/3/publish"
+          }
+        },
+        {
+          "name": "18 Delete Lesson",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/lessons/{{contentLessonId}}"
+          }
+        },
+        {
+          "name": "19 Delete Module",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/content/courses/{{contentCourseId}}/modules/{{contentModuleId}}"
+          }
+        },
+        {
+          "name": "Direct \u2014 Health (port 8085)",
+          "request": {
+            "method": "GET",
+            "url": "{{contentServiceUrl}}/api/content/health"
+          }
+        }
       ]
     },
     {
-      "name": "3. Admin Service (12) — via Gateway",
+      "name": "6. Enrollment Service (10) \u2014 via Gateway",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/health"
+          }
+        },
+        {
+          "name": "Enroll (free course)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/enrollments",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackId\": \"devops\",\n  \"courseId\": 7\n}"
+            }
+          }
+        },
+        {
+          "name": "My Enrollments",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/me",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Enrollment by Track",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/me/cloud",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Course Progress",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/me/courses/1/progress",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Track Progress",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/progress/tracks/cloud",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Update Lesson Progress",
+          "request": {
+            "method": "PUT",
+            "url": "{{baseUrl}}/api/enrollments/progress/lessons/1001",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackId\": \"cloud\",\n  \"completed\": true,\n  \"watchDurationSec\": 600\n}"
+            }
+          }
+        },
+        {
+          "name": "Complete Lesson",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/enrollments/progress/lessons/1001/complete",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackId\": \"cloud\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Student Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/dashboard/student",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Check Enrollment",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/enrollments/check/cloud",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Cancel Enrollment (Admin)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/enrollments/1",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Port **8086**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "7. Learning Service (12) \u2014 via Gateway",
+      "description": "Port **8087**. Notes, bookmarks, sessions, Q&A. Run **03 Save Session** → **04 Update Session**; **06 Create Note** → **07/08**.",
+      "item": [
+        {
+          "name": "01 Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/learning/health"
+          }
+        },
+        {
+          "name": "02 Resume Session",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/sessions/resume"
+          }
+        },
+        {
+          "name": "03 Save Session",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.id) pm.collectionVariables.set('learningSessionId', String(j.id));",
+                  "pm.test('Session saved', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/sessions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackId\": \"cloud\",\n  \"lessonId\": \"1001\",\n  \"trackName\": \"Cloud Architecture\",\n  \"lessonTitle\": \"Intro to AWS\",\n  \"lastPositionSec\": 120\n}"
+            }
+          }
+        },
+        {
+          "name": "04 Update Session",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/sessions/{{learningSessionId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"trackId\": \"cloud\",\n  \"lessonId\": \"1001\",\n  \"trackName\": \"Cloud Architecture\",\n  \"lessonTitle\": \"Intro to AWS\",\n  \"lastPositionSec\": 340\n}"
+            }
+          }
+        },
+        {
+          "name": "05 My Notes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/notes"
+          }
+        },
+        {
+          "name": "06 Create Note",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.id) pm.collectionVariables.set('learningNoteId', String(j.id));",
+                  "pm.test('Note created', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/notes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonId\": 1001,\n  \"trackId\": \"cloud\",\n  \"content\": \"EC2 instances are virtual servers in AWS.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "07 Update Note",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/notes/{{learningNoteId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonId\": 1001,\n  \"trackId\": \"cloud\",\n  \"content\": \"Updated: EC2 + EBS storage notes.\"\n}"
+            }
+          }
+        },
+        {
+          "name": "08 Delete Note",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/notes/{{learningNoteId}}"
+          }
+        },
+        {
+          "name": "09 My Bookmarks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/bookmarks"
+          }
+        },
+        {
+          "name": "10 Add Bookmark",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const j = pm.response.json();",
+                  "if (j.id) pm.collectionVariables.set('learningBookmarkId', String(j.id));",
+                  "pm.test('Bookmark added', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/bookmarks",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lessonId\": 1001,\n  \"trackId\": \"cloud\",\n  \"title\": \"AWS EC2 Basics\"\n}"
+            }
+          }
+        },
+        {
+          "name": "11 Delete Bookmark",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/bookmarks/{{learningBookmarkId}}"
+          }
+        },
+        {
+          "name": "12 Lesson Q&A List",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/learning/lessons/{{lessonId}}/qa"
+          }
+        },
+        {
+          "name": "13 Post Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/learning/lessons/{{lessonId}}/qa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"What is the difference between EC2 and Lambda?\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Direct \u2014 Health (port 8087)",
+          "request": {
+            "method": "GET",
+            "url": "{{learningServiceUrl}}/api/learning/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Certificate Service (6) \u2014 via Gateway",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certificates/health"
+          }
+        },
+        {
+          "name": "My Certificates",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certificates/me",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Certificate Detail",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certificates/CN-AWSA-8412",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Verify Certificate (public)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certificates/verify/CN-AWSA-8412"
+          }
+        },
+        {
+          "name": "Download PDF",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/certificates/CN-AWSA-8412/download",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Share Certificate",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/certificates/CN-AWSA-8412/share",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Generate (internal)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/certificates/generate",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": 3,\n  \"trackId\": \"devops\",\n  \"recipientName\": \"Alex Chen\"\n}"
+            }
+          }
+        }
+      ],
+      "description": "Port **8090**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "9. Review Service (8) \u2014 via Gateway",
+      "item": [
+        {
+          "name": "Course Reviews List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/courses/2?page=0&size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "courses",
+                "2"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Course Rating Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reviews/courses/2/summary"
+          }
+        },
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "301"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Modern JS is fantastic\",\n  \"body\": \"Clear explanations on ES6+, async patterns, and project structure.\",\n  \"reviewerName\": \"Rohan Mehta\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reviews/courses/3"
+          }
+        },
+        {
+          "name": "Update Review",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "201"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Excellent deep dive into Azure AI (updated)\",\n  \"body\": \"Even better after the new RAG module was added.\",\n  \"reviewerName\": \"Priya Verma\"\n}"
+            },
+            "url": "{{baseUrl}}/api/reviews/1"
+          }
+        },
+        {
+          "name": "Mark Review Helpful",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "999"
+              }
+            ],
+            "url": "{{baseUrl}}/api/reviews/1/helpful"
+          }
+        },
+        {
+          "name": "My Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "201"
+              }
+            ],
+            "url": "{{baseUrl}}/api/reviews/me"
+          }
+        },
+        {
+          "name": "Mentor Course Reviews",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "101"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/mentor/me?courseIds=1&courseIds=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reviews",
+                "mentor",
+                "me"
+              ],
+              "query": [
+                {
+                  "key": "courseIds",
+                  "value": "1"
+                },
+                {
+                  "key": "courseIds",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "201"
+              }
+            ],
+            "url": "{{baseUrl}}/api/reviews/3"
+          }
+        }
+      ],
+      "description": "Port **8091**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "10. Notification Service (8) \u2014 via Gateway",
+      "description": "Port **8092**. All requests via API Gateway (`{{baseUrl}}`).",
+      "item": [
+        {
+          "name": "01 Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/notifications/health"
+          }
+        },
+        {
+          "name": "02 My Notifications (Student)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.content && json.content.length) {",
+                  "  const first = json.content.find(n => n.unread) || json.content[0];",
+                  "  pm.collectionVariables.set('notificationId', String(first.id));",
+                  "}",
+                  "pm.test('Notifications list OK', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(json.totalElements).to.be.above(0);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/me?page=0&size=20"
+          }
+        },
+        {
+          "name": "02b My Notifications (Mentor)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/me?page=0&size=20"
+          }
+        },
+        {
+          "name": "02c My Notifications (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/me?page=0&size=20"
+          }
+        },
+        {
+          "name": "03 Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read"
+          }
+        },
+        {
+          "name": "04 Mark All Read",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/read-all"
+          }
+        },
+        {
+          "name": "05 Delete Notification",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Run Admin Send first to create a disposable notification, or use 02 to set notificationId"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/{{notificationId}}"
+          }
+        },
+        {
+          "name": "06 Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/unread-count"
+          }
+        },
+        {
+          "name": "07 Get Preferences",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/notifications/preferences"
+          }
+        },
+        {
+          "name": "08 Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailEnrollment\": true,\n  \"emailPayment\": true,\n  \"emailAssignment\": true,\n  \"emailCertificate\": true,\n  \"pushEnabled\": false\n}"
+            },
+            "url": "{{baseUrl}}/api/notifications/preferences"
+          }
+        },
+        {
+          "name": "09 Admin Send Notification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (Array.isArray(json) && json.length) {",
+                  "  pm.collectionVariables.set('notificationId', String(json[0].id));",
+                  "}",
+                  "pm.test('Admin send OK', () => pm.response.to.have.status(200));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userIds\": [{{studentUserId}}],\n  \"type\": \"system\",\n  \"title\": \"Scheduled maintenance\",\n  \"message\": \"Platform maintenance Sunday 2 AM UTC.\",\n  \"link\": \"/student/notifications\",\n  \"actionLabel\": \"View details\",\n  \"priority\": \"normal\"\n}"
+            },
+            "url": "{{baseUrl}}/api/notifications/send"
+          }
+        },
+        {
+          "name": "09b Admin Broadcast (all users)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"broadcast\": true,\n  \"type\": \"alert\",\n  \"title\": \"Platform announcement\",\n  \"message\": \"New courses added this week.\",\n  \"link\": \"/student/catalog\",\n  \"actionLabel\": \"Browse courses\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": "{{baseUrl}}/api/notifications/send"
+          }
+        },
+        {
+          "name": "Direct \u2014 Health (port 8092)",
+          "request": {
+            "method": "GET",
+            "url": "{{notificationServiceUrl}}/api/notifications/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Analytics Service (10) \u2014 via Gateway",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/health"
+          }
+        },
+        {
+          "name": "Student Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/student/dashboard",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Mentor Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/mentor/dashboard",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Mentor Revenue",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/mentor/revenue",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Mentor Students",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/mentor/students",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Mentor Course Analytics",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/mentor/courses/1",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Admin Dashboard",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/admin/dashboard",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Enrollment Report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/admin/reports/enrollments?period=month",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Revenue Report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/admin/reports/revenue?period=month",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Course Report",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/admin/reports/courses?period=month",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Export CSV",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/analytics/admin/export?type=enrollments&from=2026-01-01&to=2026-06-30",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{adminUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "ADMIN"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Port **8093**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "12. Admin Service (12) \u2014 via Gateway",
       "item": [
         {
           "name": "01 Health",
@@ -866,10 +3187,232 @@
             "url": "{{baseUrl}}/api/admin/reports/generate"
           }
         }
+      ],
+      "description": "Port **8094**. All requests via API Gateway (`{{baseUrl}}`)."
+    },
+    {
+      "name": "13. Media Service (8) \u2014 via Gateway",
+      "description": "Port **8095**. All requests via API Gateway (`{{baseUrl}}`).",
+      "item": [
+        {
+          "name": "01 Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/media/health"
+          }
+        },
+        {
+          "name": "02 Upload Image",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const j=pm.response.json(); if(j.id) pm.collectionVariables.set('mediaFileId', String(j.id));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/media/upload/image"
+          }
+        },
+        {
+          "name": "03 Upload Video (Mentor)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/media/upload/video"
+          }
+        },
+        {
+          "name": "04 Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/media/upload/document"
+          }
+        },
+        {
+          "name": "05 Get File Metadata",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/media/files/{{mediaFileId}}"
+          }
+        },
+        {
+          "name": "06 Upload Course Thumbnail",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{mentorUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "MENTOR"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/media/upload/course-thumbnail?courseId={{contentCourseId}}"
+          }
+        },
+        {
+          "name": "07 Upload Avatar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/api/media/upload/avatar"
+          }
+        },
+        {
+          "name": "08 Presigned URL",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/media/files/{{mediaFileId}}/presigned-url"
+          }
+        },
+        {
+          "name": "09 Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-User-Id",
+                "value": "{{studentUserId}}"
+              },
+              {
+                "key": "X-User-Role",
+                "value": "STUDENT"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/media/files/{{mediaFileId}}"
+          }
+        },
+        {
+          "name": "Direct \u2014 Health (port 8095)",
+          "request": {
+            "method": "GET",
+            "url": "{{mediaServiceUrl}}/api/media/health"
+          }
+        }
       ]
     },
     {
-      "name": "4. Gateway Smoke Tests",
+      "name": "14. Gateway Smoke Tests",
       "item": [
         {
           "name": "Login via Gateway",
@@ -918,506 +3461,8 @@
             "url": "{{baseUrl}}/api/admin/approvals/courses?status=Pending"
           }
         }
-      ]
-    },
-    {
-      "name": "5. Catalog Service — via Gateway",
-      "item": [
-        {
-          "name": "Health Check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/health"
-          }
-        },
-        {
-          "name": "List Courses (with filters)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/catalog/courses?page=0&size=12&difficulty=Intermediate&sort=rating",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "catalog",
-                "courses"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "0"
-                },
-                {
-                  "key": "size",
-                  "value": "12"
-                },
-                {
-                  "key": "difficulty",
-                  "value": "Intermediate"
-                },
-                {
-                  "key": "sort",
-                  "value": "rating"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Featured Courses",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/courses/featured"
-          }
-        },
-        {
-          "name": "Course Filters",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/courses/filters"
-          }
-        },
-        {
-          "name": "Course By Slug",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/courses/aws-solution-architect"
-          }
-        },
-        {
-          "name": "Course Preview",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/courses/aws-solution-architect/preview"
-          }
-        },
-        {
-          "name": "List Tracks",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/tracks"
-          }
-        },
-        {
-          "name": "Track Detail",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/tracks/cloud"
-          }
-        },
-        {
-          "name": "Track Courses",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/tracks/cloud/courses"
-          }
-        },
-        {
-          "name": "Explore By Type",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/explore/cloud"
-          }
-        },
-        {
-          "name": "Search Courses",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/catalog/explore/search?q=aws&difficulty=Intermediate&page=0&size=12",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "catalog",
-                "explore",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "aws"
-                },
-                {
-                  "key": "difficulty",
-                  "value": "Intermediate"
-                },
-                {
-                  "key": "page",
-                  "value": "0"
-                },
-                {
-                  "key": "size",
-                  "value": "12"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Categories",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/categories"
-          }
-        },
-        {
-          "name": "Public Stats",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/stats/public"
-          }
-        },
-        {
-          "name": "FAQ",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/faq"
-          }
-        },
-        {
-          "name": "Testimonials",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/testimonials"
-          }
-        },
-        {
-          "name": "How It Works",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/catalog/how-it-works"
-          }
-        },
-        {
-          "name": "Submit Course for Approval (Mentor)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{accessToken}}"
-              },
-              {
-                "key": "X-User-Id",
-                "value": "{{mentorUserId}}"
-              },
-              {
-                "key": "X-User-Role",
-                "value": "MENTOR"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"title\": \"Advanced Kubernetes Patterns Workshop\",\n  \"category\": \"Cloud & DevOps\",\n  \"level\": \"Advanced\",\n  \"description\": \"Learn production-grade Kubernetes deployment strategies, Helm charts, service mesh integration, and observability patterns for cloud-native apps.\",\n  \"outcomes\": [\"Deploy multi-cluster apps\", \"Use Helm and GitOps\"],\n  \"tags\": [\"Kubernetes\", \"DevOps\"],\n  \"modules\": 2,\n  \"lessons\": 4,\n  \"pricingModel\": \"paid\",\n  \"price\": 99.99,\n  \"mentorName\": \"Dr. Arjan Singh\"\n}"
-            },
-            "url": "{{baseUrl}}/api/catalog/courses/submit"
-          }
-        }
-      ]
-    },
-    {
-      "name": "6. Mentor Service — via Gateway",
-      "item": [
-        {
-          "name": "List Mentors",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/mentors"
-          }
-        },
-        {
-          "name": "Mentor By Slug",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/mentors/arjan-singh"
-          }
-        },
-        {
-          "name": "Mentor Courses",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/mentors/arjan-singh/courses"
-          }
-        },
-        {
-          "name": "Mentor Reviews Summary",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/mentors/arjan-singh/reviews"
-          }
-        },
-        {
-          "name": "My Dashboard",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "101"
-              }
-            ],
-            "url": "{{baseUrl}}/api/mentors/me/dashboard"
-          }
-        },
-        {
-          "name": "My Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "101"
-              }
-            ],
-            "url": "{{baseUrl}}/api/mentors/me/profile"
-          }
-        },
-        {
-          "name": "Update Profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "101"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"bio\": \"Updated bio — 10+ years building distributed systems.\",\n  \"longBio\": \"Updated long bio with more mentorship focus.\",\n  \"location\": \"San Francisco, CA\",\n  \"available\": true,\n  \"specialties\": [\"System Design\", \"Go\", \"Kubernetes\"]\n}"
-            },
-            "url": "{{baseUrl}}/api/mentors/me/profile"
-          }
-        },
-        {
-          "name": "My Students",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "101"
-              }
-            ],
-            "url": "{{baseUrl}}/api/mentors/me/students"
-          }
-        },
-        {
-          "name": "Student Detail",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "101"
-              }
-            ],
-            "url": "{{baseUrl}}/api/mentors/me/students/201"
-          }
-        },
-        {
-          "name": "Notifications Count",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "101"
-              }
-            ],
-            "url": "{{baseUrl}}/api/mentors/me/notifications-count"
-          }
-        }
-      ]
-    },
-    {
-      "name": "7. Review Service — via Gateway",
-      "item": [
-        {
-          "name": "Course Reviews List",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/reviews/courses/2?page=0&size=10",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "reviews",
-                "courses",
-                "2"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "0"
-                },
-                {
-                  "key": "size",
-                  "value": "10"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Course Rating Summary",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/api/reviews/courses/2/summary"
-          }
-        },
-        {
-          "name": "Submit Review",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "301"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Modern JS is fantastic\",\n  \"body\": \"Clear explanations on ES6+, async patterns, and project structure.\",\n  \"reviewerName\": \"Rohan Mehta\"\n}"
-            },
-            "url": "{{baseUrl}}/api/reviews/courses/3"
-          }
-        },
-        {
-          "name": "Update Review",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "201"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"rating\": 5,\n  \"title\": \"Excellent deep dive into Azure AI (updated)\",\n  \"body\": \"Even better after the new RAG module was added.\",\n  \"reviewerName\": \"Priya Verma\"\n}"
-            },
-            "url": "{{baseUrl}}/api/reviews/1"
-          }
-        },
-        {
-          "name": "Mark Review Helpful",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "999"
-              }
-            ],
-            "url": "{{baseUrl}}/api/reviews/1/helpful"
-          }
-        },
-        {
-          "name": "My Reviews",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "201"
-              }
-            ],
-            "url": "{{baseUrl}}/api/reviews/me"
-          }
-        },
-        {
-          "name": "Mentor Course Reviews",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "101"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/reviews/mentor/me?courseIds=1&courseIds=2",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "reviews",
-                "mentor",
-                "me"
-              ],
-              "query": [
-                {
-                  "key": "courseIds",
-                  "value": "1"
-                },
-                {
-                  "key": "courseIds",
-                  "value": "2"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Delete Review",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "X-User-Id",
-                "value": "201"
-              }
-            ],
-            "url": "{{baseUrl}}/api/reviews/3"
-          }
-        }
-      ]
+      ],
+      "description": "Quick end-to-end checks through the gateway after login."
     }
   ]
 }

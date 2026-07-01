@@ -1,6 +1,6 @@
 {
   "id": "lms-full-local-env",
-  "name": "LMS \u2014 Local (API Gateway)",
+  "name": "LMS \u2014 Local (15 Services)",
   "values": [
     {
       "key": "baseUrl",
@@ -113,6 +113,204 @@
     {
       "key": "mentor_user_id",
       "value": "2",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "enrollmentUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "learningUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "certificateUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "analyticsUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "notificationUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "notificationId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "contentUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "mediaUrl",
+      "value": "http://localhost:8080",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "contentCourseId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "contentModuleId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "contentLessonId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "mediaFileId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "authServiceUrl",
+      "value": "http://localhost:8081",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userServiceUrl",
+      "value": "http://localhost:8082",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "catalogServiceUrl",
+      "value": "http://localhost:8083",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "mentorServiceUrl",
+      "value": "http://localhost:8084",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "contentServiceUrl",
+      "value": "http://localhost:8085",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "enrollmentServiceUrl",
+      "value": "http://localhost:8086",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "learningServiceUrl",
+      "value": "http://localhost:8087",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "certificateServiceUrl",
+      "value": "http://localhost:8090",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "reviewServiceUrl",
+      "value": "http://localhost:8091",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "notificationServiceUrl",
+      "value": "http://localhost:8092",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "analyticsServiceUrl",
+      "value": "http://localhost:8093",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "adminServiceUrl",
+      "value": "http://localhost:8094",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "mediaServiceUrl",
+      "value": "http://localhost:8095",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "learningSessionId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "learningNoteId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "learningBookmarkId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "lessonId",
+      "value": "1001",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "courseId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "reviewId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "enrollmentId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "certificateId",
+      "value": "CN-AWSA-8412",
       "type": "default",
       "enabled": true
     }
