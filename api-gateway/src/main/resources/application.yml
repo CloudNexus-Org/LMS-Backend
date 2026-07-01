@@ -8,7 +8,7 @@ spring:
     gateway:
       discovery:
         locator:
-          enabled: true
+          enabled: false
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Allow-Headers Access-Control-Allow-Methods, RETAIN_FIRST
       routes:
@@ -29,15 +29,15 @@ spring:
           predicates:
             - Path=/api/mentors/**
         - id: content-service
-          uri: lb://content-service
+          uri: ${CONTENT_SERVICE_URI:http://localhost:8085}
           predicates:
             - Path=/api/content/**
         - id: enrollment-service
-          uri: lb://enrollment-service
+          uri: ${ENROLLMENT_SERVICE_URI:http://localhost:8086}
           predicates:
             - Path=/api/enrollments/**
         - id: learning-service
-          uri: lb://learning-service
+          uri: ${LEARNING_SERVICE_URI:http://localhost:8087}
           predicates:
             - Path=/api/learning/**
         - id: assessment-service
@@ -49,7 +49,7 @@ spring:
           predicates:
             - Path=/api/payments/**
         - id: certificate-service
-          uri: lb://certificate-service
+          uri: ${CERTIFICATE_SERVICE_URI:http://localhost:8090}
           predicates:
             - Path=/api/certificates/**
         - id: review-service
@@ -57,11 +57,11 @@ spring:
           predicates:
             - Path=/api/reviews/**
         - id: notification-service
-          uri: lb://notification-service
+          uri: ${NOTIFICATION_SERVICE_URI:http://localhost:8092}
           predicates:
             - Path=/api/notifications/**
         - id: analytics-service
-          uri: lb://analytics-service
+          uri: ${ANALYTICS_SERVICE_URI:http://localhost:8093}
           predicates:
             - Path=/api/analytics/**
         - id: admin-service
@@ -69,7 +69,7 @@ spring:
           predicates:
             - Path=/api/admin/**
         - id: media-service
-          uri: lb://media-service
+          uri: ${MEDIA_SERVICE_URI:http://localhost:8095}
           predicates:
             - Path=/api/media/**
 
