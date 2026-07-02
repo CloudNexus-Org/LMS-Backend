@@ -59,6 +59,12 @@ public class UserService {
         if (request.getLocation() != null) {
             user.setLocation(request.getLocation().trim());
         }
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            user.setUsername(request.getUsername().trim().replaceAll("^@", ""));
+        }
+        if (request.getProfessionalRole() != null) {
+            user.setProfessionalRole(request.getProfessionalRole().trim());
+        }
         user.setLastActive(Instant.now());
         userRepository.save(user);
         eventProducer.publishUserUpdated(user.getId(), user.getEmail(), user.getFullName(), user.getRole());
@@ -296,6 +302,10 @@ public class UserService {
                 now,
                 now
         );
+        if (user.getUsername() == null || user.getUsername().isBlank()) {
+            String local = email.split("@")[0].toLowerCase().replaceAll("[^a-z0-9._-]", "");
+            user.setUsername(local.isBlank() ? "user" + userId : local);
+        }
         attachDefaultSettings(user);
         userRepository.save(user);
     }
@@ -414,6 +424,9 @@ public class UserService {
                 .avatar(displayAvatar(user))
                 .phone(user.getPhone())
                 .bio(user.getBio())
+                .location(user.getLocation())
+                .username(user.getUsername())
+                .professionalRole(user.getProfessionalRole())
                 .status(displayStatus(user.getStatus()))
                 .joined(formatJoined(user.getJoinedAt()))
                 .lastActive(formatLastActive(user.getLastActive()))

@@ -8,4 +8,6 @@ public class ProfileUpdateRequest {
     String phone;
     String bio;
     String location;
+    String username;
+    String professionalRole;
 }
