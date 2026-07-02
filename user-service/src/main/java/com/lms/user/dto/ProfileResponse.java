@@ -13,6 +13,9 @@ public class ProfileResponse {
     String avatar;
     String phone;
     String bio;
+    String location;
+    String username;
+    String professionalRole;
     String status;
     String joined;
     String lastActive;
