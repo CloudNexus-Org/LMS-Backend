@@ -34,6 +34,7 @@ public class CatalogService {
 
     private final CourseRepository courseRepository;
     private final TrackRepository trackRepository;
+    private final TrackCourseRepository trackCourseRepository;
     private final CategoryRepository categoryRepository;
     private final FaqRepository faqRepository;
     private final TestimonialRepository testimonialRepository;
@@ -254,6 +255,56 @@ public class CatalogService {
         syncApprovalToAdmin(event);
 
         return CourseResponse.from(course);
+    }
+
+    @Transactional
+    public CourseResponse updateMentorCourse(Long mentorId, String mentorRole, Long courseId, SubmitCourseRequest request) {
+        requireMentor(mentorRole);
+        Course course = getOwnedCatalogCourse(mentorId, courseId);
+        if (PUBLISHED.equalsIgnoreCase(course.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Published courses cannot be edited");
+        }
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            course.setTitle(request.getTitle().trim());
+        }
+        if (request.getDescription() != null && !request.getDescription().isBlank()) {
+            course.setDescription(request.getDescription().trim());
+        }
+        if (request.getLevel() != null) course.setDifficulty(request.getLevel());
+        if (request.getModules() != null) course.setModules(request.getModules());
+        if (request.getLessons() != null) course.setLessons(request.getLessons());
+        if (request.getPrice() != null) course.setPrice(request.getPrice());
+        if (request.getMentorName() != null) course.setProfessor(request.getMentorName().trim());
+        if (request.getOutcomes() != null) {
+            course.setOutcomes(request.getOutcomes().stream()
+                    .filter(o -> o != null && !o.isBlank()).toList());
+        }
+        if (request.getTags() != null) course.setSkills(request.getTags());
+        if (request.getCategory() != null) {
+            course.setExploreType(mapCategoryToExploreType(request.getCategory()));
+        }
+        return CourseResponse.from(courseRepository.save(course));
+    }
+
+    @Transactional
+    public Map<String, String> deleteMentorCourse(Long mentorId, String mentorRole, Long courseId) {
+        requireMentor(mentorRole);
+        Course course = getOwnedCatalogCourse(mentorId, courseId);
+        if (PUBLISHED.equalsIgnoreCase(course.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Published courses cannot be deleted");
+        }
+        trackCourseRepository.deleteByCourseId(courseId);
+        courseRepository.delete(course);
+        return Map.of("message", "Course deleted", "courseId", String.valueOf(courseId));
+    }
+
+    private Course getOwnedCatalogCourse(Long mentorId, Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+        if (course.getMentorId() == null || !course.getMentorId().equals(mentorId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your course");
+        }
+        return course;
     }
 
     private void syncApprovalToAdmin(Map<String, Object> event) {

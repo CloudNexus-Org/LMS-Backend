@@ -9,6 +9,9 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:15432}/lms_users
     username: ${POSTGRES_USER:lms_admin}
     password: ${POSTGRES_PASSWORD:lms_secret}
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 1
 
   jpa:
     hibernate:

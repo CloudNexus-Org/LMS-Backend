@@ -166,6 +166,38 @@ public class EnrollmentService {
                 .build();
     }
 
+    @Transactional
+    public TrackProgressResponse finishTrack(Long userId, String trackId) {
+        requireEnrollment(userId, trackId);
+        TrackProgress tp = trackProgressRepository.findByIdUserIdAndIdTrackId(userId, trackId)
+                .orElseGet(() -> TrackProgress.builder()
+                        .id(new TrackProgressId(userId, trackId))
+                        .totalLessons(CatalogMetadata.totalLessonsForTrack(trackId))
+                        .build());
+        int total = tp.getTotalLessons() != null && tp.getTotalLessons() > 0
+                ? tp.getTotalLessons()
+                : CatalogMetadata.totalLessonsForTrack(trackId);
+        tp.setTotalLessons(total);
+        tp.setCompletedLessons(total);
+        tp.setProgressPct(100);
+        trackProgressRepository.save(tp);
+
+        Enrollment enrollment = enrollmentRepository.findByUserIdAndTrackId(userId, trackId).orElseThrow();
+        if (!"COMPLETED".equals(enrollment.getStatus())) {
+            enrollment.setStatus("COMPLETED");
+            enrollmentRepository.save(enrollment);
+            eventProducer.publishTrackCompleted(userId, trackId);
+        }
+
+        return TrackProgressResponse.builder()
+                .trackId(trackId)
+                .progress(100)
+                .completedLessons(total)
+                .totalLessons(total)
+                .lastLessonId(tp.getLastLessonId())
+                .build();
+    }
+
     public StudentDashboardResponse studentDashboard(Long userId) {
         List<Enrollment> enrollments = enrollmentRepository.findByUserIdOrderByEnrolledAtDesc(userId);
         long inProgress = enrollments.stream().filter(e -> "ACTIVE".equals(e.getStatus())).count();

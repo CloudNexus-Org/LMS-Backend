@@ -9,6 +9,9 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:15432}/lms_auth
     username: ${POSTGRES_USER:lms_admin}
     password: ${POSTGRES_PASSWORD:lms_secret}
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 1
 
   jpa:
     hibernate:
@@ -47,6 +50,9 @@ auth:
   login:
     max-attempts: 5
     lock-minutes: 15
+  dev:
+    # Return OTP in API responses for local/dev (no SMTP). Set AUTH_DEV_EXPOSE_OTP=false in production.
+    expose-otp: ${AUTH_DEV_EXPOSE_OTP:true}
 
 management:
   endpoints:

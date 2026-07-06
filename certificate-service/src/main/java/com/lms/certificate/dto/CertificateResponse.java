@@ -18,6 +18,7 @@ public class CertificateResponse {
     String recipient;
     String verifyLink;
     String track;
+    String trackId;
     String mentor;
     String status;
 
@@ -34,6 +35,7 @@ public class CertificateResponse {
                 .recipient(cert.getRecipientName())
                 .verifyLink(cert.getVerifyUrl())
                 .track(cert.getTrack())
+                .trackId(cert.getTrackId())
                 .mentor(cert.getMentorName())
                 .status(cert.getStatus())
                 .build();

@@ -6,6 +6,7 @@ import com.lms.auth.model.*;
 import com.lms.auth.repository.*;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,6 +24,7 @@ import java.util.HexFormat;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -55,6 +57,9 @@ public class AuthService {
 
     @Value("${auth.login.lock-minutes:15}")
     private int loginLockMinutes;
+
+    @Value("${auth.dev.expose-otp:false}")
+    private boolean exposeOtpInResponse;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -146,11 +151,11 @@ public class AuthService {
     @Transactional
     public Map<String, String> forgotPassword(ForgotPasswordRequest request) {
         String email = normalizeEmail(request.getEmail());
-        credentialRepository.findByEmailIgnoreCase(email)
+        AuthCredential user = credentialRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
 
-        generateAndSendOtp(email, OTP_PURPOSE_PASSWORD_RESET);
-        return Map.of("message", "OTP sent to your email");
+        String code = generateAndSendOtp(email, user.getId(), OTP_PURPOSE_PASSWORD_RESET);
+        return otpResponse("OTP sent to your email", code);
     }
 
     @Transactional
@@ -169,11 +174,11 @@ public class AuthService {
         String email = normalizeEmail(request.getEmail());
         String purpose = normalizePurpose(request.getPurpose());
 
-        credentialRepository.findByEmailIgnoreCase(email)
+        AuthCredential user = credentialRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
 
-        generateAndSendOtp(email, purpose);
-        return Map.of("message", "OTP resent successfully");
+        String code = generateAndSendOtp(email, user.getId(), purpose);
+        return otpResponse("OTP resent successfully", code);
     }
 
     @Transactional
@@ -296,7 +301,7 @@ public class AuthService {
                 });
     }
 
-    private void generateAndSendOtp(String email, String purpose) {
+    private String generateAndSendOtp(String email, Long userId, String purpose) {
         String code = generateOtpCode();
         Instant expiresAt = Instant.now().plus(Duration.ofMinutes(otpExpiryMinutes));
 
@@ -309,7 +314,16 @@ public class AuthService {
                 .verified(false)
                 .build());
 
-        eventProducer.publishOtpSent(email, purpose, expiresAt);
+        eventProducer.publishOtpSent(email, purpose, code, userId, expiresAt);
+        log.info("OTP generated for {} (purpose={})", email, purpose);
+        return code;
+    }
+
+    private Map<String, String> otpResponse(String message, String code) {
+        if (exposeOtpInResponse && code != null) {
+            return Map.of("message", message, "otp", code);
+        }
+        return Map.of("message", message);
     }
 
     private OtpCode findValidOtp(String email, String code, String purpose) {
