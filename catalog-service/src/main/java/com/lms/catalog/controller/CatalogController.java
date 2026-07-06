@@ -50,6 +50,23 @@ public class CatalogController {
         return catalogService.submitCourseForApproval(mentorId, role, request);
     }
 
+    @PutMapping("/courses/{courseId}")
+    public CourseResponse updateCourse(
+            @RequestHeader("X-User-Id") Long mentorId,
+            @RequestHeader("X-User-Role") String role,
+            @PathVariable Long courseId,
+            @RequestBody SubmitCourseRequest request) {
+        return catalogService.updateMentorCourse(mentorId, role, courseId, request);
+    }
+
+    @DeleteMapping("/courses/{courseId}")
+    public Map<String, String> deleteCourse(
+            @RequestHeader("X-User-Id") Long mentorId,
+            @RequestHeader("X-User-Role") String role,
+            @PathVariable Long courseId) {
+        return catalogService.deleteMentorCourse(mentorId, role, courseId);
+    }
+
     @GetMapping("/courses/filters")
     public FilterOptionsResponse filters() {
         return catalogService.getFilters();

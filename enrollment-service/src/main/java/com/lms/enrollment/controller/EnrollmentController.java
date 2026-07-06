@@ -64,6 +64,13 @@ public class EnrollmentController {
         return enrollmentService.completeLesson(userId, lessonId, request);
     }
 
+    @PostMapping("/progress/tracks/{trackId}/finish")
+    public TrackProgressResponse finishTrack(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable String trackId) {
+        return enrollmentService.finishTrack(userId, trackId);
+    }
+
     @GetMapping("/dashboard/student")
     public StudentDashboardResponse studentDashboard(@RequestHeader("X-User-Id") Long userId) {
         return enrollmentService.studentDashboard(userId);

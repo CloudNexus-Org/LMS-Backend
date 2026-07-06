@@ -59,13 +59,15 @@ class ContentControllerTest {
 
         mockMvc.perform(post("/api/content/courses/" + courseId + "/modules")
                         .header("X-User-Id", "2")
+                        .header("X-User-Role", "MENTOR")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"title\":\"Module 1\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Module 1"));
 
         mockMvc.perform(get("/api/content/courses/drafts")
-                        .header("X-User-Id", "2"))
+                        .header("X-User-Id", "2")
+                        .header("X-User-Role", "MENTOR"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }

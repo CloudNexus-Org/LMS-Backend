@@ -25,10 +25,14 @@ public class AuthEventProducer {
         send("user.registered", email, payload);
     }
 
-    public void publishOtpSent(String email, String purpose, Instant expiresAt) {
+    public void publishOtpSent(String email, String purpose, String code, Long userId, Instant expiresAt) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("email", email);
         payload.put("purpose", purpose);
+        payload.put("code", code);
+        if (userId != null) {
+            payload.put("userId", userId);
+        }
         payload.put("expiresAt", expiresAt.toString());
         send("otp.sent", email, payload);
     }

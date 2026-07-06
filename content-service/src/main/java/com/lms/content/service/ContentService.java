@@ -31,8 +31,8 @@ public class ContentService {
     private final ObjectMapper objectMapper;
 
     @Transactional
-    public CourseResponse createCourse(Long mentorId, CreateCourseRequest request) {
-        requireMentor(mentorId);
+    public CourseResponse createCourse(Long mentorId, String role, CreateCourseRequest request) {
+        mentorOnly(mentorId, role);
         CourseContent course = CourseContent.builder()
                 .mentorId(mentorId)
                 .status(CourseStatus.DRAFT)
@@ -53,7 +53,8 @@ public class ContentService {
     }
 
     @Transactional
-    public CourseResponse updateCourse(Long mentorId, Long courseId, UpdateCourseRequest request) {
+    public CourseResponse updateCourse(Long mentorId, String role, Long courseId, UpdateCourseRequest request) {
+        mentorOnly(mentorId, role);
         CourseContent course = getOwnedCourse(mentorId, courseId);
         if (request.getTitle() != null) course.setTitle(request.getTitle());
         if (request.getSubtitle() != null) course.setSubtitle(request.getSubtitle());
@@ -69,19 +70,22 @@ public class ContentService {
         return toCourseResponse(courseRepository.save(course), true);
     }
 
-    public CourseResponse getCourse(Long mentorId, Long courseId) {
+    public CourseResponse getCourse(Long mentorId, String role, Long courseId) {
+        mentorOnly(mentorId, role);
         CourseContent course = getOwnedCourse(mentorId, courseId);
         return toCourseResponse(course, true);
     }
 
-    public List<CourseResponse> listDrafts(Long mentorId) {
+    public List<CourseResponse> listDrafts(Long mentorId, String role) {
+        mentorOnly(mentorId, role);
         return courseRepository.findByMentorIdOrderByUpdatedAtDesc(mentorId).stream()
                 .map(c -> toCourseResponse(c, false))
                 .toList();
     }
 
     @Transactional
-    public ModuleResponse addModule(Long mentorId, Long courseId, ModuleRequest request) {
+    public ModuleResponse addModule(Long mentorId, String role, Long courseId, ModuleRequest request) {
+        mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         int order = request.getOrderIndex() != null
                 ? request.getOrderIndex()
@@ -96,7 +100,8 @@ public class ContentService {
     }
 
     @Transactional
-    public ModuleResponse updateModule(Long mentorId, Long courseId, Long moduleId, ModuleRequest request) {
+    public ModuleResponse updateModule(Long mentorId, String role, Long courseId, Long moduleId, ModuleRequest request) {
+        mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         CourseModule module = getModuleInCourse(courseId, moduleId);
         if (request.getTitle() != null) module.setTitle(request.getTitle());
@@ -106,7 +111,8 @@ public class ContentService {
     }
 
     @Transactional
-    public Map<String, String> deleteModule(Long mentorId, Long courseId, Long moduleId) {
+    public Map<String, String> deleteModule(Long mentorId, String role, Long courseId, Long moduleId) {
+        mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         CourseModule module = getModuleInCourse(courseId, moduleId);
         lessonRepository.deleteByModuleId(moduleId);
@@ -115,7 +121,8 @@ public class ContentService {
     }
 
     @Transactional
-    public LessonResponse addLesson(Long mentorId, Long courseId, Long moduleId, LessonRequest request) {
+    public LessonResponse addLesson(Long mentorId, String role, Long courseId, Long moduleId, LessonRequest request) {
+        mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         getModuleInCourse(courseId, moduleId);
         int order = request.getOrderIndex() != null
@@ -138,7 +145,8 @@ public class ContentService {
     }
 
     @Transactional
-    public LessonResponse updateLesson(Long mentorId, Long courseId, Long lessonId, LessonRequest request) {
+    public LessonResponse updateLesson(Long mentorId, String role, Long courseId, Long lessonId, LessonRequest request) {
+        mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         Lesson lesson = getLessonInCourse(courseId, lessonId);
         if (request.getTitle() != null) lesson.setTitle(request.getTitle());
@@ -153,7 +161,8 @@ public class ContentService {
     }
 
     @Transactional
-    public Map<String, String> deleteLesson(Long mentorId, Long courseId, Long lessonId) {
+    public Map<String, String> deleteLesson(Long mentorId, String role, Long courseId, Long lessonId) {
+        mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         Lesson lesson = getLessonInCourse(courseId, lessonId);
         lessonRepository.delete(lesson);
@@ -161,7 +170,8 @@ public class ContentService {
     }
 
     @Transactional
-    public CourseResponse reorderCurriculum(Long mentorId, Long courseId, ReorderRequest request) {
+    public CourseResponse reorderCurriculum(Long mentorId, String role, Long courseId, ReorderRequest request) {
+        mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         if (request.getModules() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "modules required");
@@ -182,7 +192,8 @@ public class ContentService {
     }
 
     @Transactional
-    public CourseResponse submitForApproval(Long mentorId, Long courseId) {
+    public CourseResponse submitForApproval(Long mentorId, String role, Long courseId) {
+        mentorOnly(mentorId, role);
         CourseContent course = getOwnedCourse(mentorId, courseId);
         if (course.getTitle() == null || course.getTitle().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Course title is required");
@@ -195,7 +206,8 @@ public class ContentService {
     }
 
     @Transactional
-    public CourseResponse updatePricing(Long mentorId, Long courseId, PricingRequest request) {
+    public CourseResponse updatePricing(Long mentorId, String role, Long courseId, PricingRequest request) {
+        mentorOnly(mentorId, role);
         CourseContent course = getOwnedCourse(mentorId, courseId);
         if (request.getPricingPlan() != null) course.setPricingPlan(request.getPricingPlan());
         if (request.getPrice() != null) course.setPrice(request.getPrice());
@@ -203,7 +215,8 @@ public class ContentService {
     }
 
     @Transactional
-    public CourseResponse publishCourse(Long mentorId, Long courseId) {
+    public CourseResponse publishCourse(Long mentorId, String role, Long courseId) {
+        mentorOnly(mentorId, role);
         CourseContent course = getOwnedCourse(mentorId, courseId);
         if (course.getStatus() != CourseStatus.APPROVED && course.getStatus() != CourseStatus.PUBLISHED) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -216,12 +229,35 @@ public class ContentService {
         return toCourseResponse(saved, true);
     }
 
+    @Transactional
+    public Map<String, String> deleteCourse(Long mentorId, String role, Long courseId) {
+        mentorOnly(mentorId, role);
+        CourseContent course = getOwnedCourse(mentorId, courseId);
+        if (course.getStatus() == CourseStatus.PUBLISHED || course.getStatus() == CourseStatus.APPROVED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Published or approved courses cannot be deleted");
+        }
+        purgeCourseCurriculum(courseId);
+        courseRepository.delete(course);
+        return Map.of("message", "Course deleted", "courseId", String.valueOf(courseId));
+    }
+
     public List<LessonResponse> getTrackLessons(String trackId) {
-        List<CourseContent> courses = courseRepository.findByTrackId(trackId);
+        List<CourseContent> courses = courseRepository.findByTrackId(trackId).stream()
+                .filter(c -> c.getStatus() == CourseStatus.PUBLISHED
+                        || c.getStatus() == CourseStatus.APPROVED)
+                .toList();
         if (courses.isEmpty()) {
-            courses = courseRepository.findAll().stream()
-                    .filter(c -> c.getStatus() == CourseStatus.PUBLISHED || c.getStatus() == CourseStatus.APPROVED)
-                    .collect(Collectors.toList());
+            return List.of();
+        }
+        Long primaryCatalogId = TrackCatalog.primaryCourseId(trackId);
+        if (primaryCatalogId != null) {
+            List<CourseContent> primary = courses.stream()
+                    .filter(c -> primaryCatalogId.equals(c.getCourseId()))
+                    .toList();
+            if (!primary.isEmpty()) {
+                courses = primary;
+            }
         }
         List<LessonResponse> result = new ArrayList<>();
         int order = 1;
@@ -329,9 +365,28 @@ public class ContentService {
                 .orElse(null);
     }
 
-    private void requireMentor(Long mentorId) {
+    private void purgeCourseCurriculum(Long courseId) {
+        List<CourseModule> modules = moduleRepository.findByCourseIdOrderByOrderIndexAsc(courseId);
+        for (CourseModule module : modules) {
+            List<Lesson> lessons = lessonRepository.findByModuleIdOrderByOrderIndexAsc(module.getId());
+            for (Lesson lesson : lessons) {
+                resourceRepository.deleteAll(
+                        resourceRepository.findByLessonIdOrderByIdAsc(lesson.getId()));
+                if (transcriptRepository.existsById(lesson.getId())) {
+                    transcriptRepository.deleteById(lesson.getId());
+                }
+            }
+            lessonRepository.deleteByModuleId(module.getId());
+        }
+        moduleRepository.deleteByCourseId(courseId);
+    }
+
+    private void mentorOnly(Long mentorId, String role) {
         if (mentorId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "X-User-Id required");
+        }
+        if (role == null || !"MENTOR".equalsIgnoreCase(role.trim())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Mentor role required");
         }
     }
 

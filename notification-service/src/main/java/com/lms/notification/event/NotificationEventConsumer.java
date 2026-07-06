@@ -163,6 +163,27 @@ public class NotificationEventConsumer {
         );
     }
 
+    @KafkaListener(topics = "otp.sent", groupId = "notification-service")
+    public void onOtpSent(Map<String, Object> event) {
+        String email = stringVal(event.get("email"));
+        String code = stringVal(event.get("code"));
+        String purpose = stringVal(event.get("purpose"));
+        Long userId = longVal(event.get("userId"));
+        log.info("OTP event received for {} (purpose={})", email, purpose);
+        if (userId != null && code != null) {
+            notificationService.createNotification(
+                    userId,
+                    "system",
+                    "Password reset code",
+                    "Your verification code is " + code + ". It expires in a few minutes.",
+                    "/verify-otp",
+                    "Enter code",
+                    "high",
+                    false
+            );
+        }
+    }
+
     private static Long longVal(Object value) {
         if (value == null) return null;
         if (value instanceof Number n) return n.longValue();
