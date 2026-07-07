@@ -145,18 +145,57 @@ public class AdminService {
     }
 
     public FinancialSummaryResponse getFinancialSummary() {
-        int recentSales = (int) financialTransactionRepository.findAll().stream()
-                .filter(tx -> "Course Sale".equals(tx.getType()))
+        List<FinancialTransaction> all = financialTransactionRepository.findAll();
+
+        BigDecimal totalSalesBd = all.stream()
+                .filter(tx -> "Course Sale".equalsIgnoreCase(tx.getType()))
+                .map(FinancialTransaction::getAmount)
+                .filter(a -> a != null && a.signum() > 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal mentorPayoutsBd = all.stream()
+                .filter(tx -> "Mentor Payout".equalsIgnoreCase(tx.getType()))
+                .map(FinancialTransaction::getAmount)
+                .filter(a -> a != null)
+                .map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal refundsBd = all.stream()
+                .filter(tx -> "Refund".equalsIgnoreCase(tx.getType()))
+                .map(FinancialTransaction::getAmount)
+                .filter(a -> a != null)
+                .map(BigDecimal::abs)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal platformCutBd = all.stream()
+                .map(FinancialTransaction::getPlatformCut)
+                .filter(c -> c != null && c.signum() > 0)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        long totalSales = totalSalesBd.longValue();
+        long mentorPayouts = mentorPayoutsBd.longValue();
+        long refunds = refundsBd.longValue();
+        long platformCut = platformCutBd.longValue();
+
+        if (platformCut == 0 && totalSales > 0) {
+            platformCut = Math.max(0, totalSales - mentorPayouts - refunds);
+        }
+
+        long netRevenue = platformCut > 0 ? platformCut : Math.max(0, totalSales - mentorPayouts);
+
+        int recentSales = (int) all.stream()
+                .filter(tx -> "Course Sale".equalsIgnoreCase(tx.getType()))
                 .count();
+
         String currency = platformSettingRepository.findById("platform.currency")
                 .map(PlatformSetting::getValue)
                 .orElse("INR");
 
         return FinancialSummaryResponse.builder()
-                .totalSales(TOTAL_SALES)
-                .mentorPayouts(MENTOR_PAYOUTS_TOTAL)
-                .netRevenue(NET_REVENUE)
-                .platformCut(TOTAL_SALES - MENTOR_PAYOUTS_TOTAL)
+                .totalSales(totalSales)
+                .mentorPayouts(mentorPayouts)
+                .netRevenue(netRevenue)
+                .platformCut(platformCut)
                 .recentSalesCount(recentSales)
                 .currency(currency)
                 .build();

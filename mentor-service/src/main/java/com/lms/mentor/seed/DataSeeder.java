@@ -22,7 +22,7 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (mentorRepository.count() > 0) return;
 
-        Mentor arjan = mentor("arjan-singh", 101L, "Arjan Singh", "Staff Software Engineer", "Ex-Google",
+        Mentor arjan = mentor("arjan-singh", 2L, "Arjan Singh", "Staff Software Engineer", "Ex-Google",
                 "Full-Stack Web",
                 "10+ years building distributed systems at Google and Stripe.",
                 "Arjan spent a decade at Google's Core Infrastructure team before joining Stripe.",
@@ -38,7 +38,7 @@ public class DataSeeder implements CommandLineRunner {
                 List.of(taught("System Design for Senior Engineers", "Advanced", 12, 18, 1L),
                         taught("Production Kubernetes: Zero to Hero", "Intermediate", 9, 14, 7L)));
 
-        Mentor priya = mentor("priya-mehta", 102L, "Priya Mehta", "Principal ML Engineer", "Ex-Meta",
+        Mentor priya = mentor("priya-mehta", 6L, "Priya Mehta", "Principal ML Engineer", "Ex-Meta",
                 "AI / ML",
                 "Led ML platform teams at Meta and Netflix.",
                 "Priya has spent over 8 years at the intersection of ML research and production engineering.",
@@ -57,11 +57,11 @@ public class DataSeeder implements CommandLineRunner {
         mentorRepository.saveAll(List.of(arjan, priya));
 
         mentorStudentRepository.saveAll(List.of(
-                MentorStudent.builder().mentorUserId(101L).studentId(201L)
+                MentorStudent.builder().mentorUserId(2L).studentId(201L)
                         .studentName("Aarav Sharma").studentEmail("aarav@example.com")
                         .courseId(1L).courseTitle("AWS Solution Architect")
                         .progress(65).status("in-progress").build(),
-                MentorStudent.builder().mentorUserId(101L).studentId(202L)
+                MentorStudent.builder().mentorUserId(2L).studentId(202L)
                         .studentName("Sneha Patel").studentEmail("sneha@example.com")
                         .courseId(7L).courseTitle("Docker Containerization Essentials")
                         .progress(82).status("in-progress").build()

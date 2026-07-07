@@ -34,6 +34,7 @@ public class MentorEventConsumer {
                 .company(String.valueOf(event.getOrDefault("company", "")))
                 .trackLabel(String.valueOf(event.getOrDefault("trackLabel", "")))
                 .bio(String.valueOf(event.getOrDefault("bio", "")))
+                .location(String.valueOf(event.getOrDefault("location", "")))
                 .avatarUrl(String.valueOf(event.getOrDefault("avatarUrl", "")))
                 .rating(0.0)
                 .reviewsCount(0)

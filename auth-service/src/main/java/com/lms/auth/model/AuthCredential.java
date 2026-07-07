@@ -15,7 +15,6 @@ import java.time.Instant;
 public class AuthCredential {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)

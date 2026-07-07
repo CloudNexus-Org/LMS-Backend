@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface LessonQaRepository extends JpaRepository<LessonQa, Long> {
     List<LessonQa> findByLessonIdOrderByCreatedAtDesc(Long lessonId);
+    long countByAnswerIsNull();
 }
