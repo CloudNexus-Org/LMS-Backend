@@ -93,6 +93,11 @@ public class LearningController {
         return learningService.postQuestion(userId, lessonId, request);
     }
 
+    @GetMapping("/mentor/qa/pending")
+    public java.util.Map<String, Long> pendingQaForMentor() {
+        return java.util.Map.of("count", learningService.pendingQaCount());
+    }
+
     @GetMapping("/health")
     public java.util.Map<String, String> health() {
         return java.util.Map.of("status", "UP", "service", "learning-service");

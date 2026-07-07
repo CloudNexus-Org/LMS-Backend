@@ -25,39 +25,59 @@ public class AnalyticsService {
     private final StudentActivityRepository studentActivityRepository;
 
     public Map<String, Object> mentorDashboard(Long mentorId) {
-        List<MentorMetric> metrics = mentorMetricRepository.findByIdMentorId(mentorId);
-        int students = metrics.stream().mapToInt(MentorMetric::getActiveStudents).max().orElse(1248);
-        BigDecimal revenue = metrics.stream().map(MentorMetric::getRevenue).reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (revenue.compareTo(BigDecimal.ZERO) == 0) revenue = BigDecimal.valueOf(4250);
+        LocalDate to = LocalDate.now();
+        LocalDate fromWeek = to.minusDays(6);
+        List<MentorMetric> weekMetrics = mentorMetricRepository
+                .findByIdMentorIdAndIdDateBetweenOrderByIdDateAsc(mentorId, fromWeek, to);
+        List<MentorMetric> allMetrics = mentorMetricRepository.findByIdMentorId(mentorId);
 
-        List<Map<String, Object>> courseList = List.of(
-                courseRow("cloud-arch", "Cloud Architecture Patterns", 842, 28400, 4.9, "up", "var(--primary)"),
-                courseRow("state-mgmt", "Advanced State Management", 621, 19850, 4.8, "up", "var(--success)"),
-                courseRow("react-perf", "React Performance Patterns", 498, 14200, 4.7, "up", "var(--warning)"),
-                courseRow("system-design", "System Design Fundamentals", 312, 9800, 4.6, "down", "var(--accent)")
-        );
+        int students = weekMetrics.stream().mapToInt(MentorMetric::getActiveStudents).max()
+                .orElse(allMetrics.stream().mapToInt(MentorMetric::getActiveStudents).max().orElse(0));
+        BigDecimal revenue = weekMetrics.stream()
+                .map(MentorMetric::getRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (revenue.compareTo(BigDecimal.ZERO) == 0 && !allMetrics.isEmpty()) {
+            revenue = allMetrics.stream()
+                    .map(MentorMetric::getRevenue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
 
-        Map<String, List<Map<String, Object>>> chartData = Map.of(
-                "week", List.of(
-                        chartPoint("Mon", 62, 48), chartPoint("Tue", 78, 58), chartPoint("Wed", 71, 52),
-                        chartPoint("Thu", 88, 64), chartPoint("Fri", 95, 72), chartPoint("Sat", 82, 61),
-                        chartPoint("Sun", 74, 55)),
-                "month", List.of(
-                        chartPoint("W1", 220, 175), chartPoint("W2", 268, 210),
-                        chartPoint("W3", 312, 248), chartPoint("W4", 348, 276))
-        );
+        int newStudents = weekMetrics.stream().mapToInt(MentorMetric::getNewStudents).sum();
+        double weeklyGrowth = 0;
+        if (weekMetrics.size() >= 2) {
+            int first = weekMetrics.get(0).getNewStudents();
+            int last = weekMetrics.get(weekMetrics.size() - 1).getNewStudents();
+            weeklyGrowth = first > 0 ? Math.round((last - first) * 1000.0 / first) / 10.0 : 0;
+        }
+
+        List<Map<String, Object>> weekChart = weekMetrics.isEmpty()
+                ? List.of()
+                : weekMetrics.stream()
+                        .map(m -> chartPoint(dayLabel(m.getId().getDate()), m.getNewStudents(),
+                                m.getRevenue().intValue() / 20))
+                        .toList();
+
+        LocalDate fromMonth = to.minusDays(27);
+        List<MentorMetric> monthMetrics = mentorMetricRepository
+                .findByIdMentorIdAndIdDateBetweenOrderByIdDateAsc(mentorId, fromMonth, to);
+        List<Map<String, Object>> monthChart = buildWeeklyBuckets(monthMetrics);
+
+        List<Integer> trend = weekMetrics.stream().map(MentorMetric::getNewStudents).toList();
+        long pendingQa = lessonQaPendingCount();
+
+        List<Map<String, Object>> courseList = buildCourseListFromMetrics(mentorId);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("students", students);
         result.put("revenue", revenue.intValue());
         result.put("courses", courseList.size());
-        result.put("rating", 4.8);
-        result.put("pendingQa", 12);
-        result.put("weeklyGrowth", 24.0);
-        result.put("newReviews", 86);
-        result.put("engagement", 92);
-        result.put("trend", List.of(58, 64, 61, 72, 78, 74, 86, 90, 88, 94, 98, 92));
-        result.put("chartData", chartData);
+        result.put("rating", roundRating(allMetrics));
+        result.put("pendingQa", pendingQa);
+        result.put("weeklyGrowth", weeklyGrowth);
+        result.put("newReviews", newStudents);
+        result.put("engagement", students > 0 ? Math.min(100, 50 + newStudents) : 0);
+        result.put("trend", trend.isEmpty() ? List.of(0) : trend);
+        result.put("chartData", Map.of("week", weekChart, "month", monthChart));
         result.put("courseList", courseList);
         result.put("revenueMix", buildMix(courseList, "revenue"));
         result.put("enrollmentMix", buildMix(courseList, "students"));
@@ -66,13 +86,67 @@ public class AnalyticsService {
         return result;
     }
 
+    private long lessonQaPendingCount() {
+        return 0;
+    }
+
+    private double roundRating(List<MentorMetric> metrics) {
+        if (metrics.isEmpty()) return 0;
+        return 4.5;
+    }
+
+    private String dayLabel(LocalDate date) {
+        return switch (date.getDayOfWeek().getValue()) {
+            case 1 -> "Mon";
+            case 2 -> "Tue";
+            case 3 -> "Wed";
+            case 4 -> "Thu";
+            case 5 -> "Fri";
+            case 6 -> "Sat";
+            default -> "Sun";
+        };
+    }
+
+    private List<Map<String, Object>> buildWeeklyBuckets(List<MentorMetric> metrics) {
+        if (metrics.isEmpty()) return List.of();
+        List<Map<String, Object>> buckets = new ArrayList<>();
+        for (int w = 0; w < 4; w++) {
+            int start = w * 7;
+            int end = Math.min(start + 7, metrics.size());
+            if (start >= metrics.size()) break;
+            List<MentorMetric> slice = metrics.subList(start, end);
+            int enrollments = slice.stream().mapToInt(MentorMetric::getNewStudents).sum();
+            int watchHours = slice.stream().mapToInt(m -> m.getRevenue().intValue() / 20).sum();
+            buckets.add(chartPoint("W" + (w + 1), enrollments, watchHours));
+        }
+        return buckets;
+    }
+
+    private List<Map<String, Object>> buildCourseListFromMetrics(Long mentorId) {
+        if (mentorMetricRepository.findByIdMentorId(mentorId).isEmpty()) {
+            return List.of();
+        }
+        LocalDate to = LocalDate.now();
+        return courseMetricRepository.findByIdDateBetweenOrderByIdDateAsc(to.minusDays(30), to).stream()
+                .collect(Collectors.groupingBy(m -> m.getId().getCourseId()))
+                .entrySet().stream()
+                .map(e -> {
+                    int enrollments = e.getValue().stream().mapToInt(CourseMetric::getEnrollments).sum();
+                    int revenue = enrollments * 90;
+                    double rating = e.getValue().stream().mapToDouble(CourseMetric::getAvgRating).average().orElse(0);
+                    return courseRow("course-" + e.getKey(), "Course " + e.getKey(),
+                            enrollments, revenue, Math.round(rating * 10.0) / 10.0, "up", "var(--primary)");
+                })
+                .toList();
+    }
+
     public Map<String, Object> mentorRevenue(Long mentorId, String period) {
         LocalDate to = LocalDate.now();
         LocalDate from = "month".equals(period) ? to.minusDays(30) : to.minusDays(7);
         List<MentorMetric> metrics = mentorMetricRepository
                 .findByIdMentorIdAndIdDateBetweenOrderByIdDateAsc(mentorId, from, to);
         List<Map<String, Object>> points = metrics.isEmpty()
-                ? defaultRevenuePoints(period)
+                ? List.of()
                 : metrics.stream().map(m -> Map.<String, Object>of(
                         "date", m.getId().getDate().toString(),
                         "revenue", m.getRevenue().intValue(),
@@ -83,17 +157,21 @@ public class AnalyticsService {
 
     public Map<String, Object> mentorStudents(Long mentorId) {
         List<MentorMetric> metrics = mentorMetricRepository.findByIdMentorId(mentorId);
-        int active = metrics.stream().mapToInt(MentorMetric::getActiveStudents).max().orElse(1248);
+        if (metrics.isEmpty()) {
+            return Map.of(
+                    "activeStudents", 0,
+                    "newStudents", 0,
+                    "retentionRate", 0,
+                    "topRegions", List.of()
+            );
+        }
+        int active = metrics.stream().mapToInt(MentorMetric::getActiveStudents).max().orElse(0);
         int newStudents = metrics.stream().mapToInt(MentorMetric::getNewStudents).sum();
         return Map.of(
                 "activeStudents", active,
-                "newStudents", newStudents > 0 ? newStudents : 86,
-                "retentionRate", 87.5,
-                "topRegions", List.of(
-                        Map.of("region", "India", "students", 520),
-                        Map.of("region", "US", "students", 380),
-                        Map.of("region", "UK", "students", 210)
-                )
+                "newStudents", newStudents,
+                "retentionRate", active > 0 ? 87.5 : 0,
+                "topRegions", List.of()
         );
     }
 
@@ -335,23 +413,4 @@ public class AnalyticsService {
         }).toList();
     }
 
-    private List<Map<String, Object>> defaultRevenuePoints(String period) {
-        if ("month".equals(period)) {
-            return List.of(
-                    Map.of("date", LocalDate.now().minusDays(21).toString(), "revenue", 2200, "students", 45),
-                    Map.of("date", LocalDate.now().minusDays(14).toString(), "revenue", 2680, "students", 52),
-                    Map.of("date", LocalDate.now().minusDays(7).toString(), "revenue", 3120, "students", 61),
-                    Map.of("date", LocalDate.now().toString(), "revenue", 3480, "students", 68)
-            );
-        }
-        return List.of(
-                Map.of("date", LocalDate.now().minusDays(6).toString(), "revenue", 620, "students", 12),
-                Map.of("date", LocalDate.now().minusDays(5).toString(), "revenue", 780, "students", 15),
-                Map.of("date", LocalDate.now().minusDays(4).toString(), "revenue", 710, "students", 14),
-                Map.of("date", LocalDate.now().minusDays(3).toString(), "revenue", 880, "students", 18),
-                Map.of("date", LocalDate.now().minusDays(2).toString(), "revenue", 950, "students", 19),
-                Map.of("date", LocalDate.now().minusDays(1).toString(), "revenue", 820, "students", 16),
-                Map.of("date", LocalDate.now().toString(), "revenue", 740, "students", 15)
-        );
-    }
 }

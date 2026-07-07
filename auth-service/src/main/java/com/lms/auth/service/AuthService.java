@@ -74,6 +74,7 @@ public class AuthService {
         }
 
         AuthCredential user = credentialRepository.save(AuthCredential.builder()
+                .id(nextAuthId())
                 .email(email)
                 .passwordHash(passwordEncoder.encode(password))
                 .fullName(fullName)
@@ -85,6 +86,33 @@ public class AuthService {
                 user.getId(), user.getEmail(), user.getRole().name(), user.getFullName());
 
         return buildAuthResponse(user, false);
+    }
+
+    @Transactional
+    public void provisionCredential(
+            Long userId, String email, String password, String fullName, UserRole role) {
+        String normalizedEmail = normalizeEmail(email);
+        if (credentialRepository.existsByEmailIgnoreCase(normalizedEmail)) {
+            log.info("Auth credential already exists for {}", normalizedEmail);
+            return;
+        }
+        if (userId != null && credentialRepository.existsById(userId)) {
+            log.info("Auth credential already exists for userId {}", userId);
+            return;
+        }
+        if (password == null || password.length() < 8) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must be at least 8 characters");
+        }
+        Long id = userId != null ? userId : nextAuthId();
+        credentialRepository.save(AuthCredential.builder()
+                .id(id)
+                .email(normalizedEmail)
+                .passwordHash(passwordEncoder.encode(password))
+                .fullName(fullName != null ? fullName.trim() : normalizedEmail)
+                .role(role != null ? role : UserRole.MENTOR)
+                .active(true)
+                .build());
+        log.info("Provisioned auth credential id={} email={} role={}", id, normalizedEmail, role);
     }
 
     @Transactional
@@ -392,6 +420,13 @@ public class AuthService {
     private String deriveUsername(String email) {
         int atIndex = email.indexOf('@');
         return atIndex > 0 ? email.substring(0, atIndex) : email;
+    }
+
+    private Long nextAuthId() {
+        return credentialRepository.findAll().stream()
+                .mapToLong(AuthCredential::getId)
+                .max()
+                .orElse(0L) + 1;
     }
 
     private String generateOtpCode() {

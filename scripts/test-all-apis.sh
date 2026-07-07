@@ -45,12 +45,12 @@ check GET "$M/api/mentors" 200
 check GET "$M/api/mentors/arjan-singh" 200
 check GET "$M/api/mentors/arjan-singh/courses" 200
 check GET "$M/api/mentors/arjan-singh/reviews" 200
-check GET "$M/api/mentors/me/dashboard" 200 -H "X-User-Id: 101"
-check GET "$M/api/mentors/me/profile" 200 -H "X-User-Id: 101"
-check PUT "$M/api/mentors/me/profile" 200 -H "X-User-Id: 101" -H "Content-Type: application/json" -d '{"bio":"API test update"}'
-check GET "$M/api/mentors/me/students" 200 -H "X-User-Id: 101"
-check GET "$M/api/mentors/me/students/201" 200 -H "X-User-Id: 101"
-check GET "$M/api/mentors/me/notifications-count" 200 -H "X-User-Id: 101"
+check GET "$M/api/mentors/me/dashboard" 200 -H "X-User-Id: 2"
+check GET "$M/api/mentors/me/profile" 200 -H "X-User-Id: 2"
+check PUT "$M/api/mentors/me/profile" 200 -H "X-User-Id: 2" -H "Content-Type: application/json" -d '{"bio":"API test update"}'
+check GET "$M/api/mentors/me/students" 200 -H "X-User-Id: 2"
+check GET "$M/api/mentors/me/students/201" 200 -H "X-User-Id: 2"
+check GET "$M/api/mentors/me/notifications-count" 200 -H "X-User-Id: 2"
 
 echo "========== REVIEW (8) =========="
 check GET "$R/api/reviews/courses/2?page=0&size=10" 200

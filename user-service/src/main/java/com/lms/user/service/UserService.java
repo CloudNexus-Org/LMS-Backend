@@ -1,5 +1,6 @@
 package com.lms.user.service;
 
+import com.lms.user.client.AuthProvisioningClient;
 import com.lms.user.dto.*;
 import com.lms.user.event.UserEventProducer;
 import com.lms.user.model.User;
@@ -37,6 +38,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserEventProducer eventProducer;
+    private final AuthProvisioningClient authProvisioningClient;
 
     public ProfileResponse getProfile(Long userId) {
         User user = requireActiveUser(userId);
@@ -253,7 +255,8 @@ public class UserService {
         event.put("avatarUrl", displayAvatar(user));
         event.put("email", user.getEmail());
         event.put("username", user.getUsername());
-        event.put("password", request.getPassword());
+        authProvisioningClient.provisionMentor(
+                userId, user.getEmail(), request.getPassword(), user.getFullName());
         eventProducer.publishMentorCreated(event);
         return toMentorListItem(user);
     }
@@ -484,37 +487,15 @@ public class UserService {
     }
 
     private Integer defaultCourses(User user) {
-        if ("STUDENT".equalsIgnoreCase(user.getRole())) {
-            return switch (user.getId().intValue()) {
-                case 1 -> 4;
-                case 3 -> 6;
-                case 5 -> 2;
-                case 7 -> 0;
-                case 8 -> 3;
-                default -> 0;
-            };
-        }
-        if ("MENTOR".equalsIgnoreCase(user.getRole())) {
-            return switch (user.getId().intValue()) {
-                case 2 -> 3;
-                case 6 -> 5;
-                default -> 0;
-            };
-        }
-        return 0;
+        // Enrollment counts are populated when enrollment-service integration is wired.
+        return null;
     }
 
     private String defaultSpend(User user) {
         if (!"STUDENT".equalsIgnoreCase(user.getRole())) {
-            return "$0";
+            return null;
         }
-        return switch (user.getId().intValue()) {
-            case 1 -> "$360";
-            case 3 -> "$540";
-            case 5 -> "$180";
-            case 8 -> "$270";
-            default -> "$0";
-        };
+        return null;
     }
 
     private String displayRole(String role) {

@@ -133,4 +133,8 @@ public class LearningService {
                 .build());
         return QaResponse.from(qa);
     }
+
+    public long pendingQaCount() {
+        return lessonQaRepository.countByAnswerIsNull();
+    }
 }
