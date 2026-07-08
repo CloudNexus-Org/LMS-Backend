@@ -20,16 +20,12 @@ public class ContentEventProducer implements ContentEventPublisher {
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
-    public void publishCourseSubmitted(CourseContent course) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("contentId", course.getId());
-        payload.put("courseId", course.getId());
-        payload.put("mentorId", course.getMentorId());
-        payload.put("title", course.getTitle());
-        payload.put("category", course.getCategory());
-        payload.put("level", course.getLevel());
-        kafkaTemplate.send("course.submitted", String.valueOf(course.getId()), payload);
-        log.info("Published course.submitted for content {}", course.getId());
+    public void publishCourseSubmitted(Map<String, Object> event) {
+        String key = event.get("courseCode") != null
+                ? event.get("courseCode").toString()
+                : String.valueOf(event.get("contentId"));
+        kafkaTemplate.send("course.submitted", key, event);
+        log.info("Published course.submitted for {}", key);
     }
 
     @Override

@@ -34,6 +34,13 @@ public class CertificateController {
         return certificateService.getCertificate(userId, certificateId);
     }
 
+    @PostMapping("/claim")
+    public CertificateResponse claim(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestBody ClaimCertificateRequest request) {
+        return certificateService.claimForStudent(userId, request);
+    }
+
     @PostMapping("/generate")
     public CertificateResponse generate(
             @RequestHeader(value = "X-User-Role", required = false) String role,

@@ -39,3 +39,6 @@ management:
     web:
       exposure:
         include: health,info
+
+lms:
+  user-service-url: ${USER_SERVICE_URL:http://localhost:8082}

@@ -10,4 +10,6 @@ public interface CourseContentRepository extends JpaRepository<CourseContent, Lo
     List<CourseContent> findByMentorIdOrderByUpdatedAtDesc(Long mentorId);
     List<CourseContent> findByMentorIdAndStatusOrderByUpdatedAtDesc(Long mentorId, CourseStatus status);
     List<CourseContent> findByTrackId(String trackId);
+    List<CourseContent> findByCourseId(Long courseId);
+    List<CourseContent> findByStatus(CourseStatus status);
 }

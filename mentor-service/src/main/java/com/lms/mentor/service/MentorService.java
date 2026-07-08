@@ -24,6 +24,7 @@ public class MentorService {
     private final MentorRepository mentorRepository;
     private final MentorStudentRepository mentorStudentRepository;
     private final MentorEventProducer eventProducer;
+    private final MentorProvisioner mentorProvisioner;
 
     public List<MentorResponse> listMentors() {
         return mentorRepository.findAll().stream()
@@ -61,28 +62,25 @@ public class MentorService {
     }
 
     public Map<String, Object> getDashboard(Long userId) {
-        Mentor mentor = mentorRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mentor profile not found"));
+        Mentor mentor = requireMentor(userId);
         long studentCount = mentorStudentRepository.findByMentorUserId(userId).size();
+        int courseCount = mentor.getTaughtCourses() != null ? mentor.getTaughtCourses().size() : 0;
         return Map.of(
                 "mentor", MentorResponse.summary(mentor),
                 "totalStudents", studentCount,
-                "totalCourses", mentor.getTaughtCourses().size(),
-                "rating", mentor.getRating(),
-                "sessions", mentor.getSessionsCount()
+                "totalCourses", courseCount,
+                "rating", mentor.getRating() != null ? mentor.getRating() : 0.0,
+                "sessions", mentor.getSessionsCount() != null ? mentor.getSessionsCount() : 0
         );
     }
 
     public MentorResponse getMyProfile(Long userId) {
-        Mentor mentor = mentorRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mentor profile not found"));
-        return MentorResponse.from(mentor);
+        return MentorResponse.from(requireMentor(userId));
     }
 
     @Transactional
     public MentorResponse updateProfile(Long userId, MentorProfileUpdateRequest request) {
-        Mentor mentor = mentorRepository.findByUserId(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mentor profile not found"));
+        Mentor mentor = requireMentor(userId);
         if (request.getBio() != null) mentor.setBio(request.getBio());
         if (request.getLongBio() != null) mentor.setLongBio(request.getLongBio());
         if (request.getLocation() != null) mentor.setLocation(request.getLocation());
@@ -103,6 +101,12 @@ public class MentorService {
     }
 
     public Map<String, Integer> getNotificationsCount() {
-        return Map.of("unreadCount", 3);
+        return Map.of("unreadCount", 0);
+    }
+
+    private Mentor requireMentor(Long userId) {
+        mentorProvisioner.ensureMentor(userId);
+        return mentorRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Mentor profile not found"));
     }
 }

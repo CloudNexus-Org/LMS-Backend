@@ -22,21 +22,6 @@ public class MentorController {
         return mentorService.listMentors();
     }
 
-    @GetMapping("/{slug}")
-    public MentorResponse getMentor(@PathVariable String slug) {
-        return mentorService.getBySlug(slug);
-    }
-
-    @GetMapping("/{slug}/courses")
-    public List<Map<String, Object>> mentorCourses(@PathVariable String slug) {
-        return mentorService.getMentorCourses(slug);
-    }
-
-    @GetMapping("/{slug}/reviews")
-    public Map<String, Object> mentorReviews(@PathVariable String slug) {
-        return mentorService.getMentorReviewsSummary(slug);
-    }
-
     @GetMapping("/me/dashboard")
     public Map<String, Object> dashboard(@RequestHeader("X-User-Id") Long userId) {
         return mentorService.getDashboard(userId);
@@ -69,5 +54,20 @@ public class MentorController {
     @GetMapping("/me/notifications-count")
     public Map<String, Integer> notificationsCount() {
         return mentorService.getNotificationsCount();
+    }
+
+    @GetMapping("/{slug}")
+    public MentorResponse getMentor(@PathVariable String slug) {
+        return mentorService.getBySlug(slug);
+    }
+
+    @GetMapping("/{slug}/courses")
+    public List<Map<String, Object>> mentorCourses(@PathVariable String slug) {
+        return mentorService.getMentorCourses(slug);
+    }
+
+    @GetMapping("/{slug}/reviews")
+    public Map<String, Object> mentorReviews(@PathVariable String slug) {
+        return mentorService.getMentorReviewsSummary(slug);
     }
 }

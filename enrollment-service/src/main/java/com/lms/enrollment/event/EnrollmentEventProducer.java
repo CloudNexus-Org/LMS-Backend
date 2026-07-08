@@ -35,11 +35,12 @@ public class EnrollmentEventProducer {
         ));
     }
 
-    public void publishEnrollmentCreated(Long userId, String trackId, Long enrollmentId) {
+    public void publishEnrollmentCreated(Long userId, String trackId, Long enrollmentId, Long courseId) {
         kafkaTemplate.send("enrollment.created", trackId, Map.of(
                 "userId", userId,
                 "trackId", trackId,
-                "enrollmentId", enrollmentId
+                "enrollmentId", enrollmentId,
+                "courseId", courseId != null ? courseId : 0
         ));
     }
 }

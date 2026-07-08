@@ -52,6 +52,9 @@ public class Course {
 
     private String enrolled;
 
+    @Builder.Default
+    private Integer enrollmentCount = 0;
+
     private String status;
 
     private String thumbnailUrl;

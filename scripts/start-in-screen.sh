@@ -16,6 +16,10 @@ start_module() {
   local mod="$1"
   echo "[$(date +%H:%M:%S)] Starting $mod..."
   cd "$BASE_DIR" || exit 1
+  if [ "$mod" = "catalog-service" ] || [ "$mod" = "analytics-service" ]; then
+    find "$BASE_DIR/$mod/target/classes" -name '* 2.class' -delete 2>/dev/null || true
+    mvn -pl "$mod" clean -q
+  fi
   mvn -pl "$mod" spring-boot:run -q > "$LOG_DIR/${mod}.log" 2>&1 &
   echo $! > "$LOG_DIR/${mod}.pid"
 }

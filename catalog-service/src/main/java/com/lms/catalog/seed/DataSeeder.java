@@ -24,15 +24,18 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (courseRepository.count() > 0) {
-            return;
+        if (categoryRepository.count() == 0) {
+            seedCategories();
         }
-        seedCourses();
-        seedTracks();
-        seedCategories();
-        seedFaq();
-        seedTestimonials();
-        seedHowItWorks();
+        if (faqRepository.count() == 0) {
+            seedFaq();
+        }
+        if (testimonialRepository.count() == 0) {
+            seedTestimonials();
+        }
+        if (howItWorksStepRepository.count() == 0) {
+            seedHowItWorks();
+        }
     }
 
     private void seedCourses() {

@@ -151,6 +151,11 @@ public class ContentController {
         return contentService.getTrackLessons(trackId);
     }
 
+    @GetMapping("/catalog-courses/{catalogCourseId}/lessons")
+    public List<LessonResponse> getCatalogCourseLessons(@PathVariable Long catalogCourseId) {
+        return contentService.getCatalogCourseLessons(catalogCourseId);
+    }
+
     @GetMapping("/lessons/{lessonId}")
     public LessonResponse getLesson(@PathVariable Long lessonId) {
         return contentService.getLessonDetail(lessonId);
