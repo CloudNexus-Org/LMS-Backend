@@ -17,6 +17,7 @@ public class TransactionResponse {
     String date;
     String student;
     String course;
+    String createdAt;
 
     public static TransactionResponse from(FinancialTransaction tx) {
         return TransactionResponse.builder()
@@ -27,6 +28,7 @@ public class TransactionResponse {
                 .date(tx.getDateLabel())
                 .student(tx.getStudent())
                 .course(tx.getCourse())
+                .createdAt(tx.getCreatedAt() != null ? tx.getCreatedAt().toString() : null)
                 .build();
     }
 }

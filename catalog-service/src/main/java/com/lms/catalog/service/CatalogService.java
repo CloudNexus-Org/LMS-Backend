@@ -1,5 +1,6 @@
 package com.lms.catalog.service;
 
+import com.lms.catalog.client.UserClient;
 import com.lms.catalog.dto.*;
 import com.lms.catalog.event.CatalogEventProducer;
 import com.lms.catalog.model.*;
@@ -40,6 +41,7 @@ public class CatalogService {
     private final TestimonialRepository testimonialRepository;
     private final HowItWorksStepRepository howItWorksStepRepository;
     private final CatalogEventProducer eventProducer;
+    private final UserClient userClient;
 
     @Value("${lms.admin-service-url}")
     private String adminServiceUrl;
@@ -63,6 +65,22 @@ public class CatalogService {
                 .filter(c -> PUBLISHED.equals(c.getStatus()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
         return CourseResponse.from(course);
+    }
+
+    public CourseResponse getPublishedCourseById(Long courseId) {
+        Course course = courseRepository.findById(courseId)
+                .filter(c -> PUBLISHED.equals(c.getStatus()))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Course not found"));
+        return CourseResponse.from(course);
+    }
+
+    public Map<String, String> resolveTrackForCourse(Long courseId) {
+        return trackCourseRepository.findFirstByCourseIdOrderByOrderIndexAsc(courseId)
+                .map(tc -> Map.of(
+                        "trackId", tc.getTrack().getId(),
+                        "trackSlug", tc.getTrack().getSlug() != null ? tc.getTrack().getSlug() : tc.getTrack().getId()
+                ))
+                .orElse(Map.of("trackId", "course-" + courseId, "trackSlug", "course-" + courseId));
     }
 
     public List<CourseResponse> getFeaturedCourses() {
@@ -189,6 +207,24 @@ public class CatalogService {
     }
 
     @Transactional
+    public void incrementEnrollmentCount(Long courseId) {
+        courseRepository.findById(courseId).ifPresent(course -> {
+            int next = (course.getEnrollmentCount() != null ? course.getEnrollmentCount() : 0) + 1;
+            course.setEnrollmentCount(next);
+            course.setEnrolled(formatEnrolledLabel(next));
+            courseRepository.save(course);
+            log.info("Course {} enrollment count → {}", courseId, next);
+        });
+    }
+
+    private static String formatEnrolledLabel(int count) {
+        if (count <= 0) return "0";
+        if (count >= 1_000_000) return String.format("%.1fM", count / 1_000_000.0);
+        if (count >= 1_000) return String.format("%.1fk", count / 1_000.0);
+        return String.valueOf(count);
+    }
+
+    @Transactional
     public void publishCourse(Long courseId) {
         courseRepository.findById(courseId).ifPresentOrElse(course -> {
             course.setStatus(PUBLISHED);
@@ -196,6 +232,92 @@ public class CatalogService {
             courseRepository.save(course);
             log.info("Published course id={} slug={}", courseId, course.getSlug());
         }, () -> log.warn("Cannot publish — course not found id={}", courseId));
+    }
+
+    @Transactional
+    public Map<String, Object> syncPendingFromContent(SyncFromContentRequest request) {
+        if (request.getContentId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "contentId is required");
+        }
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "title is required");
+        }
+
+        String contentSlug = "content-" + request.getContentId();
+        Course course = courseRepository.findBySlug(contentSlug).orElse(null);
+        if (course == null && request.getCatalogCourseId() != null) {
+            course = courseRepository.findById(request.getCatalogCourseId()).orElse(null);
+        }
+
+        BigDecimal price = request.getPrice() != null ? request.getPrice() : BigDecimal.ZERO;
+        BigDecimal originalPrice = price.compareTo(BigDecimal.ZERO) > 0
+                ? price.multiply(BigDecimal.valueOf(2)).setScale(2, java.math.RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+        int modules = request.getModules() != null ? request.getModules() : 0;
+        int lessons = request.getLessons() != null ? request.getLessons() : 0;
+        String mentorName = request.getMentorName() != null ? request.getMentorName().trim() : "Mentor";
+
+        if (course == null) {
+            course = Course.builder()
+                    .slug(contentSlug)
+                    .title(request.getTitle().trim())
+                    .description(request.getDescription() != null ? request.getDescription().trim() : "")
+                    .mentorId(request.getMentorId())
+                    .professor(mentorName)
+                    .difficulty(request.getLevel())
+                    .duration(estimateDuration(modules, lessons))
+                    .modules(modules)
+                    .lessons(lessons)
+                    .price(price)
+                    .originalPrice(originalPrice)
+                    .rating(0.0)
+                    .reviewCount(0)
+                    .enrolled("0")
+                    .status(PENDING)
+                    .thumbnailUrl(request.getThumbnailUrl())
+                    .exploreType(mapCategoryToExploreType(request.getCategory()))
+                    .featured(false)
+                    .freePreview(true)
+                    .outcomes(request.getOutcomes() != null
+                            ? request.getOutcomes().stream().filter(o -> o != null && !o.isBlank()).toList()
+                            : List.of())
+                    .skills(request.getTags() != null ? request.getTags() : List.of())
+                    .build();
+        } else {
+            course.setTitle(request.getTitle().trim());
+            if (request.getDescription() != null) {
+                course.setDescription(request.getDescription().trim());
+            }
+            course.setMentorId(request.getMentorId());
+            course.setProfessor(mentorName);
+            if (request.getLevel() != null) {
+                course.setDifficulty(request.getLevel());
+            }
+            course.setModules(modules);
+            course.setLessons(lessons);
+            course.setDuration(estimateDuration(modules, lessons));
+            course.setPrice(price);
+            course.setOriginalPrice(originalPrice);
+            if (request.getThumbnailUrl() != null && !request.getThumbnailUrl().isBlank()) {
+                course.setThumbnailUrl(request.getThumbnailUrl());
+            }
+            if (request.getCategory() != null) {
+                course.setExploreType(mapCategoryToExploreType(request.getCategory()));
+            }
+            if (request.getOutcomes() != null) {
+                course.setOutcomes(request.getOutcomes().stream()
+                        .filter(o -> o != null && !o.isBlank()).toList());
+            }
+            if (request.getTags() != null) {
+                course.setSkills(request.getTags());
+            }
+            if (!PUBLISHED.equalsIgnoreCase(course.getStatus())) {
+                course.setStatus(PENDING);
+            }
+        }
+
+        course = courseRepository.save(course);
+        return Map.of("courseId", course.getId(), "slug", course.getSlug(), "status", course.getStatus());
     }
 
     @Transactional
@@ -296,6 +418,64 @@ public class CatalogService {
         trackCourseRepository.deleteByCourseId(courseId);
         courseRepository.delete(course);
         return Map.of("message", "Course deleted", "courseId", String.valueOf(courseId));
+    }
+
+    @Transactional
+    public void purgeIneligibleMentorCourses() {
+        List<Course> toDelete = new ArrayList<>();
+        for (Course course : courseRepository.findAll()) {
+            if (!isMentorSubmission(course)) {
+                continue;
+            }
+            if (isAutomatedTestCourse(course)) {
+                toDelete.add(course);
+                continue;
+            }
+            if (course.getMentorId() == null || !userClient.isActiveMentor(course.getMentorId())) {
+                toDelete.add(course);
+            }
+        }
+        for (Course course : toDelete) {
+            trackCourseRepository.deleteByCourseId(course.getId());
+            courseRepository.delete(course);
+            log.info("Removed ineligible catalog submission id={} title={}", course.getId(), course.getTitle());
+        }
+    }
+
+    /** Remove demo/platform seed courses (ids 1–9, non content-* slugs) so only mentor listings remain. */
+    @Transactional
+    public void purgePlatformSeedCourses() {
+        List<Course> toDelete = courseRepository.findAll().stream()
+                .filter(course -> !isMentorSubmission(course))
+                .toList();
+        for (Course course : toDelete) {
+            trackCourseRepository.deleteByCourseId(course.getId());
+            courseRepository.delete(course);
+            log.info("Removed platform seed catalog course id={} slug={}", course.getId(), course.getSlug());
+        }
+        List<String> demoTrackIds = List.of("cloud", "ai", "fullstack", "devops", "data", "backend");
+        for (String trackId : demoTrackIds) {
+            trackRepository.findById(trackId).ifPresent(track -> {
+                trackRepository.delete(track);
+                log.info("Removed platform seed track id={}", trackId);
+            });
+        }
+    }
+
+    private boolean isMentorSubmission(Course course) {
+        if (course.getSlug() != null && course.getSlug().startsWith("content-")) {
+            return true;
+        }
+        return course.getId() != null && course.getId() >= 10;
+    }
+
+    private boolean isAutomatedTestCourse(Course course) {
+        String title = course.getTitle() != null ? course.getTitle().trim() : "";
+        if (title.startsWith("Verification Test")) {
+            return true;
+        }
+        String description = course.getDescription() != null ? course.getDescription() : "";
+        return description.contains("automated API verification");
     }
 
     private Course getOwnedCatalogCourse(Long mentorId, Long courseId) {

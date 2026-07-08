@@ -193,42 +193,83 @@ public class AnalyticsService {
     }
 
     public Map<String, Object> adminDashboard() {
-        List<DailyMetric> recent = dailyMetricRepository.findByDateBetweenOrderByDateAsc(
-                LocalDate.now().minusDays(30), LocalDate.now());
-        int totalUsers = recent.stream().mapToInt(DailyMetric::getTotalUsers).max().orElse(12000);
-        BigDecimal revenue = recent.stream().map(DailyMetric::getTotalRevenue).reduce(BigDecimal.ZERO, BigDecimal::add);
+        LocalDate today = LocalDate.now();
+        LocalDate from30 = today.minusDays(29);
+        List<DailyMetric> recent = dailyMetricRepository.findByDateBetweenOrderByDateAsc(from30, today);
+
+        if (recent.isEmpty()) {
+            return Map.of(
+                    "mrrGrowth", 0.0,
+                    "activeLearners", 0,
+                    "learnerGrowth", 0.0,
+                    "mrrLabel", "$0",
+                    "completions", 0,
+                    "completionGrowth", 0.0,
+                    "revenueTrend", List.of(0),
+                    "revenueData", Map.of("week", List.of(), "month", List.of(), "year", List.of()),
+                    "systemHealth", List.of(),
+                    "newUsersToday", 0
+            );
+        }
+
+        int totalUsers = recent.get(recent.size() - 1).getTotalUsers();
+        BigDecimal revenue30d = recent.stream()
+                .map(DailyMetric::getTotalRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         int completions = recent.stream().mapToInt(DailyMetric::getCompletions).sum();
-        if (revenue.compareTo(BigDecimal.ZERO) == 0) revenue = BigDecimal.valueOf(118000);
+        int newUsersToday = recent.stream()
+                .filter(d -> d.getDate().equals(today))
+                .findFirst()
+                .map(DailyMetric::getNewUsers)
+                .orElse(0);
+
+        LocalDate from7 = today.minusDays(6);
+        LocalDate prev7End = from7.minusDays(1);
+        LocalDate prev7Start = prev7End.minusDays(6);
+        List<DailyMetric> last7 = dailyMetricRepository.findByDateBetweenOrderByDateAsc(from7, today);
+        List<DailyMetric> prev7 = dailyMetricRepository.findByDateBetweenOrderByDateAsc(prev7Start, prev7End);
+
+        double mrrGrowth = percentChange(sumRevenue(prev7), sumRevenue(last7));
+        double learnerGrowth = percentChange(
+                prev7.stream().mapToInt(DailyMetric::getNewUsers).sum(),
+                last7.stream().mapToInt(DailyMetric::getNewUsers).sum()
+        );
+        double completionGrowth = percentChange(
+                prev7.stream().mapToInt(DailyMetric::getCompletions).sum(),
+                last7.stream().mapToInt(DailyMetric::getCompletions).sum()
+        );
+
+        LocalDate from12 = today.minusDays(11);
+        List<DailyMetric> last12 = dailyMetricRepository.findByDateBetweenOrderByDateAsc(from12, today);
+        List<Integer> revenueTrend = last12.stream()
+                .map(d -> d.getTotalRevenue()
+                        .divide(BigDecimal.valueOf(1000), 0, RoundingMode.HALF_UP)
+                        .intValue())
+                .toList();
+
+        List<Map<String, Object>> week = last7.stream()
+                .map(d -> revPoint(
+                        dayLabel(d.getDate()),
+                        toChartThousands(d.getTotalRevenue()),
+                        toChartThousands(payoutEstimate(d.getTotalRevenue()))
+                ))
+                .toList();
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("mrrGrowth", 15.2);
+        result.put("mrrGrowth", round1(mrrGrowth));
         result.put("activeLearners", totalUsers);
-        result.put("learnerGrowth", 5.4);
-        result.put("mrrLabel", "$" + revenue.divide(BigDecimal.valueOf(1000), 1, RoundingMode.HALF_UP) + "k");
-        result.put("completions", completions > 0 ? completions : 3600);
-        result.put("completionGrowth", 8.7);
-        result.put("pendingApprovals", 2);
-        result.put("resolvedToday", 2);
-        result.put("revenueTrend", List.of(42, 58, 75, 62, 88, 70, 55, 68, 82, 95, 78, 90));
+        result.put("learnerGrowth", round1(learnerGrowth));
+        result.put("mrrLabel", "$" + revenue30d.divide(BigDecimal.valueOf(1000), 1, RoundingMode.HALF_UP) + "k");
+        result.put("completions", completions);
+        result.put("completionGrowth", round1(completionGrowth));
+        result.put("revenueTrend", revenueTrend.isEmpty() ? List.of(0) : revenueTrend);
         result.put("revenueData", Map.of(
-                "week", List.of(
-                        revPoint("Mon", 42, 18), revPoint("Tue", 58, 28), revPoint("Wed", 75, 35),
-                        revPoint("Thu", 62, 30), revPoint("Fri", 88, 45), revPoint("Sat", 70, 38),
-                        revPoint("Sun", 55, 25)),
-                "month", List.of(
-                        revPoint("W1", 40, 20), revPoint("W2", 60, 35),
-                        revPoint("W3", 80, 50), revPoint("W4", 100, 70)),
-                "year", List.of(
-                        revPoint("Q1", 40, 20), revPoint("Q2", 60, 35),
-                        revPoint("Q3", 80, 50), revPoint("Q4", 100, 70))
+                "week", week,
+                "month", buildWeeklyRevenueBuckets(recent),
+                "year", buildQuarterlyRevenueBuckets(recent)
         ));
-        result.put("systemHealth", List.of(
-                health("API Uptime", 99.9, "var(--success)", "Operational"),
-                health("DB Load", 68, "var(--warning)", "Moderate"),
-                health("CPU Usage", 42, "var(--primary)", "Normal"),
-                health("CDN Health", 95, "var(--success)", "Healthy")
-        ));
-        result.put("newUsersToday", 240);
+        result.put("systemHealth", List.of());
+        result.put("newUsersToday", newUsersToday);
         return result;
     }
 
@@ -294,13 +335,21 @@ public class AnalyticsService {
         int minutes = activities.stream().mapToInt(StudentActivity::getMinutesLearned).sum();
         int quizzes = activities.stream().mapToInt(StudentActivity::getQuizzesTaken).sum();
         long activeDays = activities.stream().filter(a -> a.getLessonsCompleted() > 0).count();
+        double hours = minutes > 0 ? Math.round(minutes / 60.0 * 10.0) / 10.0 : 0;
+        List<Integer> weekly = activities.stream()
+                .sorted((a, b) -> a.getId().getDate().compareTo(b.getId().getDate()))
+                .map(StudentActivity::getLessonsCompleted)
+                .toList();
+        if (weekly.isEmpty()) {
+            weekly = List.of(0, 0, 0, 0, 0, 0, 0);
+        }
         return Map.of(
-                "coursesInProgress", 2,
-                "hoursLearned", minutes > 0 ? Math.round(minutes / 60.0 * 10.0) / 10.0 : 18.5,
-                "lessonsCompleted", lessons > 0 ? lessons : 59,
-                "quizzesTaken", quizzes > 0 ? quizzes : 8,
-                "streak", activeDays > 0 ? activeDays : 5,
-                "weeklyActivity", List.of(3, 5, 2, 4, 6, 1, 4)
+                "coursesInProgress", 0,
+                "hoursLearned", hours,
+                "lessonsCompleted", lessons,
+                "quizzesTaken", quizzes,
+                "streak", activeDays,
+                "weeklyActivity", weekly
         );
     }
 
@@ -348,7 +397,7 @@ public class AnalyticsService {
         return dailyMetricRepository.findById(today).orElseGet(() -> {
             DailyMetric latest = dailyMetricRepository.findAll().stream()
                     .max(Comparator.comparing(DailyMetric::getDate))
-                    .orElse(DailyMetric.builder().date(today).totalUsers(12000).build());
+                    .orElse(DailyMetric.builder().date(today).totalUsers(0).build());
             return DailyMetric.builder()
                     .date(today)
                     .totalUsers(latest.getTotalUsers())
@@ -358,6 +407,88 @@ public class AnalyticsService {
                     .completions(0)
                     .build();
         });
+    }
+
+    private BigDecimal sumRevenue(List<DailyMetric> metrics) {
+        return metrics.stream()
+                .map(DailyMetric::getTotalRevenue)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    private double percentChange(double previous, double current) {
+        if (previous <= 0) {
+            return current > 0 ? 100.0 : 0.0;
+        }
+        return ((current - previous) / previous) * 100.0;
+    }
+
+    private double percentChange(BigDecimal previous, BigDecimal current) {
+        return percentChange(previous.doubleValue(), current.doubleValue());
+    }
+
+    private double round1(double value) {
+        return Math.round(value * 10.0) / 10.0;
+    }
+
+    private int toChartThousands(BigDecimal amount) {
+        if (amount == null) {
+            return 0;
+        }
+        return amount.divide(BigDecimal.valueOf(1000), 0, RoundingMode.HALF_UP).intValue();
+    }
+
+    /** Mentor share estimate (70%) when payout ledger is not in this service. */
+    private BigDecimal payoutEstimate(BigDecimal sales) {
+        if (sales == null) {
+            return BigDecimal.ZERO;
+        }
+        return sales.multiply(BigDecimal.valueOf(0.7));
+    }
+
+    private List<Map<String, Object>> buildWeeklyRevenueBuckets(List<DailyMetric> metrics) {
+        if (metrics.isEmpty()) {
+            return List.of();
+        }
+        List<Map<String, Object>> buckets = new ArrayList<>();
+        int size = metrics.size();
+        for (int w = 0; w < 4; w++) {
+            int start = Math.max(0, size - (4 - w) * 7);
+            int end = Math.min(size, start + 7);
+            if (start >= end) {
+                continue;
+            }
+            List<DailyMetric> slice = metrics.subList(start, end);
+            BigDecimal sales = sumRevenue(slice);
+            buckets.add(revPoint(
+                    "W" + (w + 1),
+                    toChartThousands(sales),
+                    toChartThousands(payoutEstimate(sales))
+            ));
+        }
+        return buckets;
+    }
+
+    private List<Map<String, Object>> buildQuarterlyRevenueBuckets(List<DailyMetric> metrics) {
+        if (metrics.isEmpty()) {
+            return List.of();
+        }
+        int size = metrics.size();
+        List<Map<String, Object>> buckets = new ArrayList<>();
+        for (int q = 0; q < 4; q++) {
+            int start = Math.max(0, size - (4 - q) * Math.max(1, size / 4));
+            int end = Math.min(size, start + Math.max(1, size / 4));
+            if (start >= end) {
+                continue;
+            }
+            List<DailyMetric> slice = metrics.subList(start, end);
+            BigDecimal sales = sumRevenue(slice);
+            buckets.add(revPoint(
+                    "Q" + (q + 1),
+                    toChartThousands(sales),
+                    toChartThousands(payoutEstimate(sales))
+            ));
+        }
+        return buckets;
     }
 
     private StudentActivity getOrCreateStudentActivity(Long userId) {

@@ -1,5 +1,6 @@
 package com.lms.certificate.service;
 
+import com.lms.certificate.client.UserClient;
 import com.lms.certificate.dto.*;
 import com.lms.certificate.event.CertificateEventProducer;
 import com.lms.certificate.model.Certificate;
@@ -24,6 +25,8 @@ public class CertificateService {
     private final CertificateRepository certificateRepository;
     private final CertificateTemplateRepository templateRepository;
     private final CertificateEventProducer eventProducer;
+    private final CertificateMetadataResolver metadataResolver;
+    private final UserClient userClient;
 
     public List<CertificateResponse> myCertificates(Long userId) {
         return certificateRepository.findByUserIdOrderByIssueDateDesc(userId).stream()
@@ -74,24 +77,41 @@ public class CertificateService {
     }
 
     @Transactional
+    public CertificateResponse claimForStudent(Long userId, ClaimCertificateRequest request) {
+        if (request.getTrackId() == null || request.getTrackId().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "trackId is required");
+        }
+        String recipient = userClient.displayName(userId).orElse("Student");
+        return CertificateResponse.from(
+                generateFromTrackCompletion(userId, request.getTrackId(), recipient, request.getCourseId()));
+    }
+
+    @Transactional
     public Certificate generateFromTrackCompletion(Long userId, String trackId, String recipientName) {
+        return generateFromTrackCompletion(userId, trackId, recipientName, null);
+    }
+
+    @Transactional
+    public Certificate generateFromTrackCompletion(Long userId, String trackId, String recipientName, Long courseIdHint) {
         if (certificateRepository.existsByUserIdAndTrackId(userId, trackId)) {
             return certificateRepository.findByUserIdOrderByIssueDateDesc(userId).stream()
                     .filter(c -> trackId.equals(c.getTrackId()))
                     .findFirst()
                     .orElseThrow();
         }
-        TrackMetadata.Meta meta = TrackMetadata.forTrack(trackId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown track"));
+        TrackMetadata.Meta meta = metadataResolver.resolve(trackId, courseIdHint);
         String code = meta.codePrefix() + "-" + ThreadLocalRandom.current().nextInt(1000, 9999);
         String verifyUrl = "cloudnexus.com/verify/" + code;
+        String recipient = recipientName != null && !recipientName.isBlank()
+                ? recipientName
+                : userClient.displayName(userId).orElse("Student");
         Certificate cert = certificateRepository.save(Certificate.builder()
                 .code(code)
                 .userId(userId)
                 .trackId(trackId)
                 .title(meta.title())
                 .description(meta.description())
-                .recipientName(recipientName != null ? recipientName : "Student")
+                .recipientName(recipient)
                 .issueDate(LocalDate.now())
                 .duration(meta.duration())
                 .mentorName(meta.mentor())

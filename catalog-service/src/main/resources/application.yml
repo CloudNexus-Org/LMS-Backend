@@ -52,3 +52,4 @@ management:
 
 lms:
   admin-service-url: ${ADMIN_SERVICE_URI:http://localhost:8094}
+  user-service-url: ${USER_SERVICE_URI:http://localhost:8082}

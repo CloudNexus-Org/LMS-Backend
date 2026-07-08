@@ -7,7 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.Instant;
 
 @Entity
-@Table(name = "enrollments", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "track_id"}))
+@Table(name = "enrollments", uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "course_id"}))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Enrollment {
     @Id

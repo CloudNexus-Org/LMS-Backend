@@ -1,5 +1,6 @@
 package com.lms.admin.service;
 
+import com.lms.admin.client.UserClient;
 import com.lms.admin.dto.*;
 import com.lms.admin.event.AdminEventProducer;
 import com.lms.admin.model.*;
@@ -38,6 +39,7 @@ public class AdminService {
     private final MentorPayoutRepository mentorPayoutRepository;
     private final AdminAuditLogRepository adminAuditLogRepository;
     private final AdminEventProducer eventProducer;
+    private final UserClient userClient;
 
     @Value("${lms.catalog-service-url}")
     private String catalogServiceUrl;
@@ -68,37 +70,64 @@ public class AdminService {
 
     @Transactional
     public void createPendingApproval(Map<String, Object> event) {
+        if (isAutomatedTestEvent(event)) {
+            log.info("Skipping automated test submission: {}", event.get("courseCode"));
+            return;
+        }
+        Long mentorId = longVal(event.get("mentorId"));
+        if (mentorId == null || !userClient.isActiveMentor(mentorId)) {
+            log.warn("Skipping approval for inactive mentor: {}", event);
+            return;
+        }
         String courseCode = stringVal(event.get("courseCode"));
         if (courseCode == null || courseCode.isBlank()) {
             log.warn("course.submitted missing courseCode: {}", event);
             return;
         }
-        if (courseApprovalRepository.existsById(courseCode)) {
-            log.info("Approval already exists for {}", courseCode);
+
+        Optional<CourseApproval> existing = courseApprovalRepository.findById(courseCode);
+        if (existing.isPresent()) {
+            CourseApproval approval = existing.get();
+            if ("Approved".equalsIgnoreCase(approval.getStatus())) {
+                log.info("Approval already finalized for {}", courseCode);
+                return;
+            }
+            applySubmissionEvent(approval, event);
+            approval.setStatus("Pending");
+            approval.setSubmitted("Just now");
+            approval.setSubmittedAt(Instant.now());
+            approval.setReviewedAt(null);
+            approval.setReviewedBy(null);
+            approval.setRejectionReason(null);
+            courseApprovalRepository.save(approval);
+            log.info("Updated pending approval for course {}", courseCode);
             return;
         }
 
         CourseApproval approval = CourseApproval.builder()
                 .courseId(courseCode)
-                .title(stringVal(event.get("title")))
-                .mentor(stringVal(event.get("mentorName")))
-                .mentorAvatar(stringVal(event.get("mentorAvatar")))
-                .category(stringVal(event.get("category")))
-                .submitted("Just now")
-                .modules(intVal(event.get("modules")))
-                .lessons(intVal(event.get("lessons")))
-                .duration(stringVal(event.get("duration")))
-                .previewRating(0.0)
-                .thumbnail(stringVal(event.get("thumbnail")))
-                .status("Pending")
-                .priority(stringVal(event.get("priority")))
-                .description(stringVal(event.get("description")))
-                .mentorId(longVal(event.get("mentorId")))
-                .submittedAt(Instant.now())
                 .build();
-
+        applySubmissionEvent(approval, event);
+        approval.setStatus("Pending");
+        approval.setSubmitted("Just now");
+        approval.setPreviewRating(0.0);
+        approval.setSubmittedAt(Instant.now());
         courseApprovalRepository.save(approval);
         log.info("Created pending approval for course {}", courseCode);
+    }
+
+    private void applySubmissionEvent(CourseApproval approval, Map<String, Object> event) {
+        approval.setTitle(stringVal(event.get("title")));
+        approval.setMentor(stringVal(event.get("mentorName")));
+        approval.setMentorAvatar(stringVal(event.get("mentorAvatar")));
+        approval.setCategory(stringVal(event.get("category")));
+        approval.setModules(intVal(event.get("modules")));
+        approval.setLessons(intVal(event.get("lessons")));
+        approval.setDuration(stringVal(event.get("duration")));
+        approval.setThumbnail(stringVal(event.get("thumbnail")));
+        approval.setPriority(stringVal(event.get("priority")));
+        approval.setDescription(stringVal(event.get("description")));
+        approval.setMentorId(longVal(event.get("mentorId")));
     }
 
     @Transactional
@@ -465,5 +494,14 @@ public class AdminService {
     private static Long longVal(Object value) {
         if (value == null) return null;
         return Long.valueOf(value.toString());
+    }
+
+    private static boolean isAutomatedTestEvent(Map<String, Object> event) {
+        String title = stringVal(event.get("title"));
+        if (title != null && title.trim().startsWith("Verification Test")) {
+            return true;
+        }
+        String description = stringVal(event.get("description"));
+        return description != null && description.contains("automated API verification");
     }
 }

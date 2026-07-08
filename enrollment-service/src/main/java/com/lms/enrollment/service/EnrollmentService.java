@@ -7,6 +7,7 @@ import com.lms.enrollment.repository.EnrollmentRepository;
 import com.lms.enrollment.repository.LessonProgressRepository;
 import com.lms.enrollment.repository.TrackProgressRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class EnrollmentService {
 
@@ -25,46 +27,51 @@ public class EnrollmentService {
     private final LessonProgressRepository lessonProgressRepository;
     private final TrackProgressRepository trackProgressRepository;
     private final EnrollmentEventProducer eventProducer;
+    private final CatalogClient catalogClient;
 
     @Transactional
     public EnrollmentDetailResponse enroll(Long userId, EnrollRequest request) {
-        if (request.getTrackId() == null || request.getTrackId().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "trackId is required");
+        if (request.getCourseId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "courseId is required");
         }
-        if (enrollmentRepository.existsByUserIdAndTrackId(userId, request.getTrackId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already enrolled in this track");
+        if (enrollmentRepository.existsByUserIdAndCourseId(userId, request.getCourseId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already enrolled in this course");
         }
-        Long courseId = request.getCourseId() != null
-                ? request.getCourseId()
-                : CatalogMetadata.courseIdForTrack(request.getTrackId());
+        String trackId = catalogClient.resolveTrackId(request.getCourseId(), request.getTrackId());
         Enrollment enrollment = enrollmentRepository.save(Enrollment.builder()
                 .userId(userId)
-                .trackId(request.getTrackId())
-                .courseId(courseId)
+                .trackId(trackId)
+                .courseId(request.getCourseId())
                 .status("ACTIVE")
                 .build());
-        initTrackProgress(userId, request.getTrackId());
-        eventProducer.publishEnrollmentCreated(userId, request.getTrackId(), enrollment.getId());
+        initTrackProgressIfNeeded(userId, trackId, request.getCourseId());
+        eventProducer.publishEnrollmentCreated(userId, trackId, enrollment.getId(), request.getCourseId());
         return toDetail(enrollment);
     }
 
     @Transactional
     public void enrollFromPayment(Long userId, String trackId, Long courseId) {
-        if (enrollmentRepository.existsByUserIdAndTrackId(userId, trackId)) {
+        if (courseId == null) {
+            log.warn("payment.success missing courseId for user {}", userId);
             return;
         }
+        if (enrollmentRepository.existsByUserIdAndCourseId(userId, courseId)) {
+            return;
+        }
+        String resolvedTrackId = catalogClient.resolveTrackId(courseId, trackId);
         Enrollment enrollment = enrollmentRepository.save(Enrollment.builder()
                 .userId(userId)
-                .trackId(trackId)
-                .courseId(courseId != null ? courseId : CatalogMetadata.courseIdForTrack(trackId))
+                .trackId(resolvedTrackId)
+                .courseId(courseId)
                 .status("ACTIVE")
                 .build());
-        initTrackProgress(userId, trackId);
-        eventProducer.publishEnrollmentCreated(userId, trackId, enrollment.getId());
+        initTrackProgressIfNeeded(userId, resolvedTrackId, courseId);
+        eventProducer.publishEnrollmentCreated(userId, resolvedTrackId, enrollment.getId(), courseId);
     }
 
     public List<MyCourseResponse> myEnrollments(Long userId) {
         return enrollmentRepository.findByUserIdOrderByEnrolledAtDesc(userId).stream()
+                .filter(e -> !"CANCELLED".equalsIgnoreCase(e.getStatus()))
                 .map(this::toMyCourse)
                 .toList();
     }
@@ -76,9 +83,7 @@ public class EnrollmentService {
     }
 
     public CourseProgressResponse courseProgress(Long userId, Long courseId) {
-        Enrollment enrollment = enrollmentRepository.findByUserIdOrderByEnrolledAtDesc(userId).stream()
-                .filter(e -> courseId.equals(e.getCourseId()))
-                .findFirst()
+        Enrollment enrollment = enrollmentRepository.findByUserIdAndCourseId(userId, courseId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No enrollment for course"));
         TrackProgress tp = trackProgressRepository.findByIdUserIdAndIdTrackId(userId, enrollment.getTrackId())
                 .orElse(null);
@@ -245,6 +250,44 @@ public class EnrollmentService {
         }
     }
 
+    private int resolveTotalLessons(Long userId, String trackId, Long courseId) {
+        if (courseId != null) {
+            int fromCatalog = catalogClient.findCourse(courseId)
+                    .map(CatalogClient.CourseSnapshot::totalLessons)
+                    .orElse(0);
+            if (fromCatalog > 0) {
+                return fromCatalog;
+            }
+        }
+        if (userId != null && trackId != null) {
+            TrackProgress tp = trackProgressRepository.findByIdUserIdAndIdTrackId(userId, trackId).orElse(null);
+            if (tp != null && tp.getTotalLessons() != null && tp.getTotalLessons() > 0) {
+                return tp.getTotalLessons();
+            }
+        }
+        return CatalogMetadata.totalLessonsForCourse(courseId);
+    }
+
+    private static int computeProgressPct(int completed, int total) {
+        if (total <= 0) {
+            return 0;
+        }
+        return (int) Math.min(100, (completed * 100) / total);
+    }
+
+    private void initTrackProgressIfNeeded(Long userId, String trackId, Long courseId) {
+        if (trackProgressRepository.findByIdUserIdAndIdTrackId(userId, trackId).isPresent()) {
+            return;
+        }
+        int total = resolveTotalLessons(userId, trackId, courseId);
+        trackProgressRepository.save(TrackProgress.builder()
+                .id(new TrackProgressId(userId, trackId))
+                .totalLessons(total)
+                .completedLessons(0)
+                .progressPct(0)
+                .build());
+    }
+
     private void initTrackProgress(Long userId, String trackId) {
         int total = CatalogMetadata.totalLessonsForTrack(trackId);
         trackProgressRepository.save(TrackProgress.builder()
@@ -256,9 +299,12 @@ public class EnrollmentService {
     }
 
     private TrackProgress recalculateTrackProgress(Long userId, String trackId, Long lastLessonId) {
-        int total = CatalogMetadata.totalLessonsForTrack(trackId);
+        Long courseId = enrollmentRepository.findByUserIdAndTrackId(userId, trackId)
+                .map(Enrollment::getCourseId)
+                .orElse(null);
+        int total = resolveTotalLessons(userId, trackId, courseId);
         long completed = lessonProgressRepository.countByUserIdAndTrackIdAndCompletedTrue(userId, trackId);
-        int pct = total > 0 ? (int) Math.min(100, (completed * 100) / total) : 0;
+        int pct = computeProgressPct((int) completed, total);
         TrackProgress tp = trackProgressRepository.findByIdUserIdAndIdTrackId(userId, trackId)
                 .orElse(TrackProgress.builder().id(new TrackProgressId(userId, trackId)).build());
         tp.setTotalLessons(total);
@@ -271,26 +317,55 @@ public class EnrollmentService {
     private MyCourseResponse toMyCourse(Enrollment enrollment) {
         TrackProgress tp = trackProgressRepository.findByIdUserIdAndIdTrackId(
                 enrollment.getUserId(), enrollment.getTrackId()).orElse(null);
-        var meta = CatalogMetadata.forTrack(enrollment.getTrackId());
-        int progress = tp != null ? tp.getProgressPct() : 0;
+        var catalogCourse = catalogClient.findCourse(enrollment.getCourseId());
+        var trackMeta = CatalogMetadata.forTrack(enrollment.getTrackId());
+
+        int totalLessons = catalogCourse.map(CatalogClient.CourseSnapshot::totalLessons)
+                .filter(n -> n > 0)
+                .orElseGet(() -> resolveTotalLessons(
+                        enrollment.getUserId(), enrollment.getTrackId(), enrollment.getCourseId()));
+        int completedLessons = tp != null ? tp.getCompletedLessons() : 0;
+        int progress = computeProgressPct(completedLessons, totalLessons);
+        if (progress == 0 && tp != null && tp.getProgressPct() != null && tp.getProgressPct() > 0) {
+            progress = tp.getProgressPct();
+        }
         String status = "COMPLETED".equals(enrollment.getStatus()) ? "completed"
-                : progress > 0 ? "in-progress" : "not-started";
+                : progress >= 100 ? "completed"
+                : completedLessons > 0 || progress > 0 ? "in-progress" : "not-started";
+
+        String title = catalogCourse.map(CatalogClient.CourseSnapshot::title)
+                .orElseGet(() -> trackMeta.map(m -> m.title()).orElse("Course"));
+        String image = catalogCourse.map(CatalogClient.CourseSnapshot::image)
+                .orElseGet(() -> trackMeta.map(m -> m.image()).orElse(""));
+        String badge = catalogCourse.map(CatalogClient.CourseSnapshot::badge)
+                .orElseGet(() -> trackMeta.map(m -> m.badge()).orElse(""));
+        String instructor = catalogCourse.map(CatalogClient.CourseSnapshot::instructor)
+                .orElseGet(() -> trackMeta.map(m -> m.instructor()).orElse(""));
+        String rating = catalogCourse.map(CatalogClient.CourseSnapshot::rating)
+                .orElseGet(() -> trackMeta.map(m -> m.rating()).orElse("0"));
+        String duration = catalogCourse.map(CatalogClient.CourseSnapshot::duration)
+                .orElseGet(() -> trackMeta.map(m -> m.duration()).orElse(""));
+        String modules = catalogCourse.map(CatalogClient.CourseSnapshot::modules)
+                .orElseGet(() -> trackMeta.map(m -> m.modules()).orElse(""));
+        String description = catalogCourse.map(CatalogClient.CourseSnapshot::description)
+                .orElseGet(() -> trackMeta.map(m -> m.description()).orElse(""));
+
         return MyCourseResponse.builder()
                 .id(enrollment.getId())
                 .trackId(enrollment.getTrackId())
                 .courseId(enrollment.getCourseId())
-                .title(meta.map(m -> m.title()).orElse("Course"))
-                .image(meta.map(m -> m.image()).orElse(""))
+                .title(title)
+                .image(image)
                 .progress(progress)
                 .status(status)
-                .totalLessons(tp != null ? tp.getTotalLessons() : meta.map(m -> m.totalLessons()).orElse(0))
-                .completedLessons(tp != null ? tp.getCompletedLessons() : 0)
-                .badge(meta.map(m -> m.badge()).orElse(""))
-                .instructor(meta.map(m -> m.instructor()).orElse(""))
-                .rating(meta.map(m -> m.rating()).orElse("0"))
-                .duration(meta.map(m -> m.duration()).orElse(""))
-                .modules(meta.map(m -> m.modules()).orElse(""))
-                .description(meta.map(m -> m.description()).orElse(""))
+                .totalLessons(totalLessons)
+                .completedLessons(completedLessons)
+                .badge(badge)
+                .instructor(instructor)
+                .rating(rating)
+                .duration(duration)
+                .modules(modules)
+                .description(description)
                 .build();
     }
 

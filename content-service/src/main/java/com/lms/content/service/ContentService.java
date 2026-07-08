@@ -3,8 +3,12 @@ package com.lms.content.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.lms.content.client.AdminClient;
+import com.lms.content.client.CatalogClient;
+import com.lms.content.client.MentorClient;
 import com.lms.content.dto.*;
 import com.lms.content.event.ContentEventPublisher;
+import com.lms.content.util.CourseSubmissionRules;
 import com.lms.content.model.*;
 import com.lms.content.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,6 +34,9 @@ public class ContentService {
     private final LessonTranscriptRepository transcriptRepository;
     private final ContentEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
+    private final MentorClient mentorClient;
+    private final CatalogClient catalogClient;
+    private final AdminClient adminClient;
 
     @Transactional
     public CourseResponse createCourse(Long mentorId, String role, CreateCourseRequest request) {
@@ -201,8 +209,136 @@ public class ContentService {
         course.setStatus(CourseStatus.PENDING);
         course.setSubmittedAt(Instant.now());
         CourseContent saved = courseRepository.save(course);
-        eventPublisher.publishCourseSubmitted(saved);
+        notifySubmissionPipeline(saved);
         return toCourseResponse(saved, true);
+    }
+
+    @Transactional
+    public void backfillPendingApprovals() {
+        for (CourseContent course : courseRepository.findByStatus(CourseStatus.PENDING)) {
+            if (!isEligibleForApprovalQueue(course)) {
+                continue;
+            }
+            try {
+                notifySubmissionPipeline(course);
+            } catch (Exception ex) {
+                // continue with other pending courses
+            }
+        }
+    }
+
+    @Transactional
+    public void purgeIneligibleSubmissions() {
+        List<CourseContent> pending = courseRepository.findByStatus(CourseStatus.PENDING);
+        for (CourseContent course : pending) {
+            if (isEligibleForApprovalQueue(course)) {
+                continue;
+            }
+            purgeCourseCurriculum(course.getId());
+            courseRepository.delete(course);
+        }
+    }
+
+    private boolean isEligibleForApprovalQueue(CourseContent course) {
+        if (CourseSubmissionRules.isAutomatedTest(course)) {
+            return false;
+        }
+        return mentorClient.isActiveMentor(course.getMentorId());
+    }
+
+    private void notifySubmissionPipeline(CourseContent course) {
+        if (!isEligibleForApprovalQueue(course)) {
+            return;
+        }
+        List<CourseModule> modules = moduleRepository.findByCourseIdOrderByOrderIndexAsc(course.getId());
+        int moduleCount = modules.size();
+        int lessonCount = modules.stream()
+                .mapToInt(m -> lessonRepository.findByModuleIdOrderByOrderIndexAsc(m.getId()).size())
+                .sum();
+
+        String mentorName = mentorClient.resolveMentorName(course.getMentorId()).orElse("Mentor");
+        BigDecimal price = course.getPrice() != null
+                ? BigDecimal.valueOf(course.getPrice())
+                : BigDecimal.ZERO;
+
+        Long catalogCourseId = catalogClient.syncPendingFromContent(new CatalogClient.SyncPayload(
+                course.getId(),
+                course.getCourseId(),
+                course.getMentorId(),
+                course.getTitle(),
+                course.getDescription(),
+                course.getCategory(),
+                course.getLevel(),
+                moduleCount,
+                lessonCount,
+                price,
+                course.getThumbnailUrl(),
+                mentorName,
+                fromJsonList(course.getOutcomesJson()),
+                fromJsonList(course.getTagsJson())
+        )).orElse(course.getCourseId());
+
+        if (catalogCourseId != null && !Objects.equals(course.getCourseId(), catalogCourseId)) {
+            course.setCourseId(catalogCourseId);
+            courseRepository.save(course);
+        }
+
+        Map<String, Object> event = buildSubmissionEvent(course, catalogCourseId, mentorName, moduleCount, lessonCount);
+        eventPublisher.publishCourseSubmitted(event);
+        adminClient.syncCourseSubmission(event);
+    }
+
+    private Map<String, Object> buildSubmissionEvent(CourseContent course, Long catalogCourseId,
+                                                     String mentorName, int moduleCount, int lessonCount) {
+        Long catalogId = catalogCourseId != null ? catalogCourseId : course.getId();
+        String courseCode = "C-" + catalogId;
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("contentId", course.getId());
+        event.put("courseId", catalogId);
+        event.put("courseCode", courseCode);
+        event.put("title", course.getTitle());
+        event.put("description", course.getDescription());
+        event.put("mentorId", course.getMentorId());
+        event.put("mentorName", mentorName);
+        event.put("mentorAvatar", initials(mentorName));
+        event.put("category", course.getCategory() != null ? course.getCategory() : "General");
+        event.put("modules", moduleCount);
+        event.put("lessons", lessonCount);
+        event.put("duration", estimateDuration(moduleCount, lessonCount));
+        event.put("thumbnail", pickThumbnail(catalogId));
+        event.put("priority", lessonCount >= 20 ? "high" : "normal");
+        return event;
+    }
+
+    private static String initials(String name) {
+        if (name == null || name.isBlank()) {
+            return "MN";
+        }
+        return Arrays.stream(name.trim().split("\\s+"))
+                .filter(s -> !s.isBlank())
+                .limit(2)
+                .map(s -> String.valueOf(s.charAt(0)).toUpperCase())
+                .collect(Collectors.joining());
+    }
+
+    private static String estimateDuration(int modules, int lessons) {
+        int mins = Math.max(lessons, 1) * 15;
+        int hours = mins / 60;
+        int rem = mins % 60;
+        if (hours > 0) {
+            return hours + "h " + (rem > 0 ? rem + "m" : "00m");
+        }
+        return rem + "m";
+    }
+
+    private static String pickThumbnail(Long courseId) {
+        List<String> gradients = List.of(
+                "from-blue-500 to-cyan-400",
+                "from-emerald-500 to-teal-400",
+                "from-violet-500 to-fuchsia-400",
+                "from-orange-500 to-red-400"
+        );
+        return gradients.get((int) (courseId % gradients.size()));
     }
 
     @Transactional
@@ -243,10 +379,7 @@ public class ContentService {
     }
 
     public List<LessonResponse> getTrackLessons(String trackId) {
-        List<CourseContent> courses = courseRepository.findByTrackId(trackId).stream()
-                .filter(c -> c.getStatus() == CourseStatus.PUBLISHED
-                        || c.getStatus() == CourseStatus.APPROVED)
-                .toList();
+        List<CourseContent> courses = resolveCoursesForTrack(trackId);
         if (courses.isEmpty()) {
             return List.of();
         }
@@ -259,6 +392,37 @@ public class ContentService {
                 courses = primary;
             }
         }
+        return buildOrderedLessonList(courses);
+    }
+
+    public List<LessonResponse> getCatalogCourseLessons(Long catalogCourseId) {
+        List<CourseContent> courses = courseRepository.findByCourseId(catalogCourseId).stream()
+                .filter(c -> c.getStatus() == CourseStatus.PUBLISHED
+                        || c.getStatus() == CourseStatus.APPROVED)
+                .toList();
+        return buildOrderedLessonList(courses);
+    }
+
+    private List<CourseContent> resolveCoursesForTrack(String trackId) {
+        if (trackId != null && trackId.startsWith("course-")) {
+            String rawId = trackId.substring("course-".length());
+            try {
+                Long catalogCourseId = Long.parseLong(rawId);
+                return courseRepository.findByCourseId(catalogCourseId).stream()
+                        .filter(c -> c.getStatus() == CourseStatus.PUBLISHED
+                                || c.getStatus() == CourseStatus.APPROVED)
+                        .toList();
+            } catch (NumberFormatException ignored) {
+                return List.of();
+            }
+        }
+        return courseRepository.findByTrackId(trackId).stream()
+                .filter(c -> c.getStatus() == CourseStatus.PUBLISHED
+                        || c.getStatus() == CourseStatus.APPROVED)
+                .toList();
+    }
+
+    private List<LessonResponse> buildOrderedLessonList(List<CourseContent> courses) {
         List<LessonResponse> result = new ArrayList<>();
         int order = 1;
         for (CourseContent course : courses) {
@@ -305,9 +469,24 @@ public class ContentService {
 
     @Transactional
     public void handleCourseApproved(Map<String, Object> event) {
+        Long catalogId = longVal(event.get("courseId"));
+        if (catalogId != null) {
+            List<CourseContent> linked = courseRepository.findByCourseId(catalogId);
+            if (!linked.isEmpty()) {
+                linked.forEach(course -> {
+                    course.setStatus(CourseStatus.APPROVED);
+                    courseRepository.save(course);
+                });
+                return;
+            }
+        }
         Long contentId = longVal(event.get("contentId"));
-        if (contentId == null) contentId = longVal(event.get("courseId"));
-        if (contentId == null) return;
+        if (contentId == null) {
+            contentId = catalogId;
+        }
+        if (contentId == null) {
+            return;
+        }
         courseRepository.findById(contentId).ifPresent(course -> {
             course.setStatus(CourseStatus.APPROVED);
             courseRepository.save(course);
@@ -316,9 +495,24 @@ public class ContentService {
 
     @Transactional
     public void handleCourseRejected(Map<String, Object> event) {
+        Long catalogId = longVal(event.get("courseId"));
+        if (catalogId != null) {
+            List<CourseContent> linked = courseRepository.findByCourseId(catalogId);
+            if (!linked.isEmpty()) {
+                linked.forEach(course -> {
+                    course.setStatus(CourseStatus.REJECTED);
+                    courseRepository.save(course);
+                });
+                return;
+            }
+        }
         Long contentId = longVal(event.get("contentId"));
-        if (contentId == null) contentId = longVal(event.get("courseId"));
-        if (contentId == null) return;
+        if (contentId == null) {
+            contentId = catalogId;
+        }
+        if (contentId == null) {
+            return;
+        }
         courseRepository.findById(contentId).ifPresent(course -> {
             course.setStatus(CourseStatus.REJECTED);
             courseRepository.save(course);

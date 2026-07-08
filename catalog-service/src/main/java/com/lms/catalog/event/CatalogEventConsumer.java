@@ -17,12 +17,30 @@ public class CatalogEventConsumer {
 
     @KafkaListener(topics = "review.created", groupId = "catalog-service")
     public void onReviewCreated(Map<String, Object> event) {
-        log.info("Received review.created: {}", event);
+        applyReviewEvent(event);
+    }
+
+    @KafkaListener(topics = "review.updated", groupId = "catalog-service")
+    public void onReviewUpdated(Map<String, Object> event) {
+        applyReviewEvent(event);
+    }
+
+    private void applyReviewEvent(Map<String, Object> event) {
+        log.info("Received review event: {}", event);
         Long courseId = toLong(event.get("courseId"));
         Double avgRating = toDouble(event.get("avgRating"));
         Integer reviewCount = toInt(event.get("reviewCount"));
         if (courseId != null && avgRating != null && reviewCount != null) {
             catalogService.updateCourseRating(courseId, avgRating, reviewCount);
+        }
+    }
+
+    @KafkaListener(topics = "enrollment.created", groupId = "catalog-service")
+    public void onEnrollmentCreated(Map<String, Object> event) {
+        log.info("Received enrollment.created: {}", event);
+        Long courseId = toLong(event.get("courseId"));
+        if (courseId != null && courseId > 0) {
+            catalogService.incrementEnrollmentCount(courseId);
         }
     }
 

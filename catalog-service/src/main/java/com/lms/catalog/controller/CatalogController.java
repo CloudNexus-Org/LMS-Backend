@@ -4,6 +4,7 @@ import com.lms.catalog.dto.CourseResponse;
 import com.lms.catalog.dto.FilterOptionsResponse;
 import com.lms.catalog.dto.PagedResponse;
 import com.lms.catalog.dto.SubmitCourseRequest;
+import com.lms.catalog.dto.SyncFromContentRequest;
 import com.lms.catalog.dto.TestimonialResponse;
 import com.lms.catalog.dto.TrackResponse;
 import com.lms.catalog.model.Category;
@@ -70,6 +71,16 @@ public class CatalogController {
     @GetMapping("/courses/filters")
     public FilterOptionsResponse filters() {
         return catalogService.getFilters();
+    }
+
+    @GetMapping("/courses/id/{courseId}")
+    public CourseResponse courseById(@PathVariable Long courseId) {
+        return catalogService.getPublishedCourseById(courseId);
+    }
+
+    @GetMapping("/courses/id/{courseId}/track")
+    public Map<String, String> trackForCourse(@PathVariable Long courseId) {
+        return catalogService.resolveTrackForCourse(courseId);
     }
 
     @GetMapping("/courses/{slug}")
@@ -148,5 +159,11 @@ public class CatalogController {
     public Map<String, String> publishCourseInternal(@PathVariable Long courseId) {
         catalogService.publishCourse(courseId);
         return Map.of("status", "PUBLISHED", "courseId", String.valueOf(courseId));
+    }
+
+    /** Called by content-service when a mentor submits curriculum for approval */
+    @PostMapping("/internal/courses/sync-from-content")
+    public Map<String, Object> syncFromContent(@RequestBody SyncFromContentRequest request) {
+        return catalogService.syncPendingFromContent(request);
     }
 }

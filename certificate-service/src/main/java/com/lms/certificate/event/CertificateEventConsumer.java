@@ -20,8 +20,13 @@ public class CertificateEventConsumer {
         log.info("Received track.completed: {}", event);
         Long userId = toLong(event.get("userId"));
         String trackId = event.get("trackId") != null ? event.get("trackId").toString() : null;
-        if (userId != null && trackId != null) {
+        if (userId == null || trackId == null) {
+            return;
+        }
+        try {
             certificateService.generateFromTrackCompletion(userId, trackId, null);
+        } catch (Exception ex) {
+            log.warn("Certificate auto-issue skipped for user {} track {}: {}", userId, trackId, ex.getMessage());
         }
     }
 
