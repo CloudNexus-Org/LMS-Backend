@@ -53,6 +53,7 @@ check GET "$M/api/mentors/me/students/201" 200 -H "X-User-Id: 2"
 check GET "$M/api/mentors/me/notifications-count" 200 -H "X-User-Id: 2"
 
 echo "========== REVIEW (8) =========="
+PGPASSWORD=lms_secret psql -h localhost -p 15432 -U lms_admin -d lms_reviews -c "DELETE FROM reviews WHERE (user_id = 399 AND course_id = 5) OR (user_id = 306 AND course_id = 2);" >/dev/null 2>&1 || true
 check GET "$R/api/reviews/courses/2?page=0&size=10" 200
 check GET "$R/api/reviews/courses/2/summary" 200
 check GET "$R/api/reviews/me" 200 -H "X-User-Id: 201"
