@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.Set;
 
-@Component
+//@Component
 @RequiredArgsConstructor
 @Slf4j
 public class UserDirectoryCleanup implements CommandLineRunner {

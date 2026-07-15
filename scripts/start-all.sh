@@ -9,8 +9,6 @@ SERVICES=(
   "content-service:8085"
   "enrollment-service:8086"
   "learning-service:8087"
-  "assessment-service:8088"
-  "payment-service:8089"
   "certificate-service:8090"
   "review-service:8091"
   "notification-service:8092"

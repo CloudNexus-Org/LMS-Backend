@@ -27,6 +27,12 @@ public class DataSeeder implements CommandLineRunner {
         if (categoryRepository.count() == 0) {
             seedCategories();
         }
+        if (courseRepository.count() == 0) {
+            seedCourses();
+        }
+        if (trackRepository.count() == 0) {
+            seedTracks();
+        }
         if (faqRepository.count() == 0) {
             seedFaq();
         }

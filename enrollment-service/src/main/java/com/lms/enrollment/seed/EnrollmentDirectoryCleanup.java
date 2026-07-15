@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@Component
+//@Component
 @Order(1)
 @RequiredArgsConstructor
 @Slf4j
