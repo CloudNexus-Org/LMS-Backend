@@ -16,34 +16,41 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/profile")
-    public ProfileResponse getProfile(@RequestHeader("X-User-Id") Long userId) {
-        return userService.getProfile(userId);
+    public ProfileResponse getProfile(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        return userService.getProfile(userId, email);
     }
 
     @PutMapping("/profile")
     public ProfileResponse updateProfile(
             @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email,
             @RequestBody ProfileUpdateRequest request) {
-        return userService.updateProfile(userId, request);
+        return userService.updateProfile(userId, email, request);
     }
 
     @PatchMapping("/profile/avatar")
     public ProfileResponse updateAvatar(
             @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email,
             @RequestBody AvatarUpdateRequest request) {
-        return userService.updateAvatar(userId, request);
+        return userService.updateAvatar(userId, email, request);
     }
 
     @GetMapping("/profile/settings")
-    public SettingsResponse getSettings(@RequestHeader("X-User-Id") Long userId) {
-        return userService.getSettings(userId);
+    public SettingsResponse getSettings(
+            @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email) {
+        return userService.getSettings(userId, email);
     }
 
     @PutMapping("/profile/settings")
     public SettingsResponse updateSettings(
             @RequestHeader("X-User-Id") Long userId,
+            @RequestHeader(value = "X-User-Email", required = false) String email,
             @RequestBody SettingsUpdateRequest request) {
-        return userService.updateSettings(userId, request);
+        return userService.updateSettings(userId, email, request);
     }
 
     @GetMapping("/mentors")

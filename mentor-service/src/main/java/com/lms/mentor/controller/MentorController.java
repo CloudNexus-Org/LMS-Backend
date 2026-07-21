@@ -44,6 +44,11 @@ public class MentorController {
         return mentorService.getStudents(userId);
     }
 
+    @GetMapping("/me/student-counts")
+    public Map<Long, Long> studentCountsByCourse(@RequestHeader("X-User-Id") Long userId) {
+        return mentorService.getStudentCountsByCourse(userId);
+    }
+
     @GetMapping("/me/students/{studentId}")
     public MentorStudent studentDetail(
             @RequestHeader("X-User-Id") Long userId,

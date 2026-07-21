@@ -28,6 +28,7 @@ public class EnrollmentService {
     private final TrackProgressRepository trackProgressRepository;
     private final EnrollmentEventProducer eventProducer;
     private final CatalogClient catalogClient;
+    private final UserClient userClient;
 
     @Transactional
     public EnrollmentDetailResponse enroll(Long userId, EnrollRequest request) {
@@ -45,7 +46,7 @@ public class EnrollmentService {
                 .status("ACTIVE")
                 .build());
         initTrackProgressIfNeeded(userId, trackId, request.getCourseId());
-        eventProducer.publishEnrollmentCreated(userId, trackId, enrollment.getId(), request.getCourseId());
+        publishEnrollmentCreatedEvent(userId, trackId, enrollment.getId(), request.getCourseId());
         return toDetail(enrollment);
     }
 
@@ -66,7 +67,24 @@ public class EnrollmentService {
                 .status("ACTIVE")
                 .build());
         initTrackProgressIfNeeded(userId, resolvedTrackId, courseId);
-        eventProducer.publishEnrollmentCreated(userId, resolvedTrackId, enrollment.getId(), courseId);
+        publishEnrollmentCreatedEvent(userId, resolvedTrackId, enrollment.getId(), courseId);
+    }
+
+    private void publishEnrollmentCreatedEvent(Long userId, String trackId, Long enrollmentId, Long courseId) {
+        var course = catalogClient.findCourse(courseId);
+        Long mentorId = course.map(CatalogClient.CourseSnapshot::mentorId).orElse(null);
+        String courseTitle = course.map(CatalogClient.CourseSnapshot::title).filter(t -> !t.isBlank()).orElse(null);
+        String studentName = userClient.displayName(userId).orElse("Student #" + userId);
+        eventProducer.publishEnrollmentCreated(
+                userId,
+                trackId,
+                enrollmentId,
+                courseId,
+                mentorId,
+                courseTitle,
+                studentName,
+                Instant.now()
+        );
     }
 
     public List<MyCourseResponse> myEnrollments(Long userId) {
@@ -231,6 +249,21 @@ public class EnrollmentService {
                         .enrollmentId(e.getId())
                         .build())
                 .orElse(EnrollmentCheckResponse.builder().enrolled(false).build());
+    }
+
+    public long activeEnrollmentCount(Long courseId) {
+        if (courseId == null) return 0;
+        return enrollmentRepository.countByCourseIdAndStatusNotIgnoreCase(courseId, "CANCELLED");
+    }
+
+    public Map<Long, Long> activeEnrollmentCounts(List<Long> courseIds) {
+        Map<Long, Long> counts = new java.util.LinkedHashMap<>();
+        if (courseIds == null) return counts;
+        for (Long courseId : courseIds) {
+            if (courseId == null) continue;
+            counts.put(courseId, activeEnrollmentCount(courseId));
+        }
+        return counts;
     }
 
     @Transactional

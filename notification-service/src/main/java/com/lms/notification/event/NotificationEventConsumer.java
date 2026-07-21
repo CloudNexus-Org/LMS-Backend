@@ -6,6 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Map;
 
 @Slf4j
@@ -39,27 +44,49 @@ public class NotificationEventConsumer {
         Long userId = longVal(event.get("userId"));
         String trackId = stringVal(event.get("trackId"));
         if (userId == null) return;
-        String trackLabel = trackId != null ? trackId + " track" : "your course";
+
+        String courseTitle = stringVal(event.get("courseTitle"));
+        String trackLabel = courseTitle != null && !courseTitle.isBlank()
+                ? "\"" + courseTitle + "\""
+                : (trackId != null && !trackId.isBlank() ? trackId + " track" : "your course");
+
         notificationService.createNotification(
                 userId,
                 "course",
                 "Enrollment confirmed",
                 "You're enrolled in " + trackLabel + ". Start learning right away.",
-                trackId != null ? "/learn/" + trackId : "/student/courses",
+                trackId != null && !trackId.isBlank() ? "/learn/" + trackId : "/student/courses",
                 "Start learning",
                 "normal",
                 false
         );
+
+        Long mentorId = longVal(event.get("mentorId"));
+        if (mentorId == null || mentorId.equals(userId)) {
+            return;
+        }
+
+        String studentName = stringVal(event.get("studentName"));
+        if (studentName == null || studentName.isBlank()) {
+            studentName = "Student #" + userId;
+        }
+        String courseLabel = courseTitle != null && !courseTitle.isBlank()
+                ? "\"" + courseTitle + "\""
+                : (trackId != null && !trackId.isBlank() ? "\"" + trackId + "\"" : "your course");
+        String whenLabel = formatPurchaseDateTime(stringVal(event.get("purchasedAt")));
+
         notificationService.createNotification(
-                2L,
+                mentorId,
                 "enrollment",
-                "New student enrolled",
-                "A student enrolled in \"" + trackLabel + "\".",
+                "Course purchased",
+                studentName + " has purchased " + courseLabel + " on " + whenLabel + ".",
                 "/mentor/students",
                 "View student",
                 "normal",
                 false
         );
+        log.info("Purchase notification created for mentor {} (student={}, course={})",
+                mentorId, userId, courseLabel);
     }
 
     @KafkaListener(topics = "payment.success", groupId = "notification-service")
@@ -196,5 +223,20 @@ public class NotificationEventConsumer {
 
     private static String stringVal(Object value) {
         return value != null ? value.toString() : null;
+    }
+
+    private static final DateTimeFormatter PURCHASE_WHEN =
+            DateTimeFormatter.ofPattern("MMM d, yyyy 'at' h:mm a", Locale.ENGLISH);
+
+    private static String formatPurchaseDateTime(String iso) {
+        if (iso == null || iso.isBlank()) {
+            return PURCHASE_WHEN.format(ZonedDateTime.now());
+        }
+        try {
+            Instant instant = Instant.parse(iso);
+            return PURCHASE_WHEN.format(instant.atZone(ZoneId.systemDefault()));
+        } catch (Exception ex) {
+            return iso;
+        }
     }
 }

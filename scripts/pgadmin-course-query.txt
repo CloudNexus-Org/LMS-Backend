@@ -1,0 +1,17 @@
+# Mentor courses — where to look in pgAdmin (Docker port 15432)
+
+WRONG:  database lms_auth  →  table courses_content   (does NOT exist here)
+RIGHT:  database lms_content → table courses_content
+
+Steps:
+1. Connect to server localhost:15432 (lms_admin / lms_secret or postgres / lms_secret)
+2. In Object Explorer open: Databases → lms_content → Schemas → public → Tables
+3. Right-click Query Tool on lms_content (check tab says lms_content/...)
+4. Run:
+
+SELECT id, title, mentor_id, course_status, created_at
+FROM courses_content
+ORDER BY id DESC;
+
+After admin approve / publish you may also see:
+  database lms_catalog → table courses

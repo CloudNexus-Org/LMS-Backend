@@ -45,7 +45,7 @@ spring:
           predicates:
             - Path=/api/assessment/**
         - id: payment-service
-          uri: lb://payment-service
+          uri: ${PAYMENT_SERVICE_URI:http://localhost:8089}
           predicates:
             - Path=/api/payments/**
         - id: certificate-service

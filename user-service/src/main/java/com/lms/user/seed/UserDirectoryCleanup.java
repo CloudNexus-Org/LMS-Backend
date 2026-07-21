@@ -6,6 +6,7 @@ import com.lms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +14,12 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.Set;
 
+/**
+ * Destructive allowlist cleanup — OFF by default.
+ * Enable only with {@code lms.directory.cleanup.enabled=true}.
+ */
 @Component
+@ConditionalOnProperty(name = "lms.directory.cleanup.enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class UserDirectoryCleanup implements CommandLineRunner {
