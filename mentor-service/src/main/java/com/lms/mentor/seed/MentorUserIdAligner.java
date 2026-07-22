@@ -21,12 +21,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MentorUserIdAligner implements CommandLineRunner {
 
-    private static final Map<String, Long> SLUG_TO_USER_ID = Map.of(
-            "arjan-singh", 2L,
-            "priya-mehta", 6L
-    );
-    private static final long LEGACY_ARJAN_USER_ID = 101L;
-    private static final long LEGACY_PRIYA_USER_ID = 102L;
+    private static final Map<String, Long> SLUG_TO_USER_ID = Map.of();
 
     private final MentorRepository mentorRepository;
     private final MentorStudentRepository mentorStudentRepository;
@@ -34,23 +29,6 @@ public class MentorUserIdAligner implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        SLUG_TO_USER_ID.forEach((slug, userId) ->
-                mentorRepository.findBySlug(slug).ifPresent(mentor -> {
-                    if (!userId.equals(mentor.getUserId())) {
-                        log.info("Aligning mentor {} userId {} -> {}", slug, mentor.getUserId(), userId);
-                        mentor.setUserId(userId);
-                        mentorRepository.save(mentor);
-                    }
-                })
-        );
-
-        for (long legacyId : new long[] { LEGACY_ARJAN_USER_ID, LEGACY_PRIYA_USER_ID }) {
-            mentorStudentRepository.findByMentorUserId(legacyId).forEach(student -> {
-                long targetId = legacyId == LEGACY_ARJAN_USER_ID ? 2L : 6L;
-                log.info("Aligning mentor student {} mentorUserId {} -> {}", student.getStudentId(), legacyId, targetId);
-                student.setMentorUserId(targetId);
-                mentorStudentRepository.save(student);
-            });
-        }
+        // Legacy static alignments removed
     }
 }

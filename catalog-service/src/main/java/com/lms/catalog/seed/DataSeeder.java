@@ -234,9 +234,9 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedFaq() {
         faqRepository.saveAll(List.of(
-                faq(1, "How is Cloud Nexus different from other LMS platforms?",
+                faq(1, "How is Realm different from other LMS platforms?",
                         "We focus on career-aligned cloud, AI, devops, and full-stack tracks taught by ex-FAANG mentors."),
-                faq(2, "Can I try Cloud Nexus before paying?",
+                faq(2, "Can I try Realm before paying?",
                         "Yes. The Starter plan is free forever. Pro plan includes a 7-day free trial."),
                 faq(3, "Are the certificates accredited?",
                         "Our certificates are industry-recognized and verifiable on LinkedIn via a unique credential URL.")

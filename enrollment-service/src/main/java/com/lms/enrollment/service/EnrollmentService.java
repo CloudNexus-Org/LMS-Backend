@@ -5,6 +5,7 @@ import com.lms.enrollment.event.EnrollmentEventProducer;
 import com.lms.enrollment.model.*;
 import com.lms.enrollment.repository.EnrollmentRepository;
 import com.lms.enrollment.repository.LessonProgressRepository;
+import com.lms.enrollment.repository.QuizAttemptRepository;
 import com.lms.enrollment.repository.TrackProgressRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class EnrollmentService {
     private final EnrollmentRepository enrollmentRepository;
     private final LessonProgressRepository lessonProgressRepository;
     private final TrackProgressRepository trackProgressRepository;
+    private final QuizAttemptRepository quizAttemptRepository;
     private final EnrollmentEventProducer eventProducer;
     private final CatalogClient catalogClient;
 
@@ -91,6 +93,11 @@ public class EnrollmentService {
                 .findByUserIdAndTrackIdAndCompletedTrue(userId, enrollment.getTrackId()).stream()
                 .map(LessonProgress::getLessonId)
                 .toList();
+        List<Long> quizPassedIds = lessonProgressRepository
+                .findByUserIdAndTrackId(userId, enrollment.getTrackId()).stream()
+                .filter(p -> Boolean.TRUE.equals(p.getQuizPassed()))
+                .map(LessonProgress::getLessonId)
+                .toList();
         return CourseProgressResponse.builder()
                 .courseId(courseId)
                 .trackId(enrollment.getTrackId())
@@ -98,6 +105,7 @@ public class EnrollmentService {
                 .completedLessons(tp != null ? tp.getCompletedLessons() : 0)
                 .totalLessons(tp != null ? tp.getTotalLessons() : CatalogMetadata.totalLessonsForTrack(enrollment.getTrackId()))
                 .completedLessonIds(completedIds)
+                .quizPassedLessonIds(quizPassedIds)
                 .build();
     }
 
@@ -126,13 +134,7 @@ public class EnrollmentService {
                         .id(new TrackProgressId(userId, trackId))
                         .totalLessons(CatalogMetadata.totalLessonsForTrack(trackId))
                         .build());
-        return TrackProgressResponse.builder()
-                .trackId(trackId)
-                .progress(tp.getProgressPct())
-                .completedLessons(tp.getCompletedLessons())
-                .totalLessons(tp.getTotalLessons())
-                .lastLessonId(tp.getLastLessonId())
-                .build();
+        return toTrackProgressResponse(userId, trackId, tp);
     }
 
     @Transactional
@@ -147,6 +149,11 @@ public class EnrollmentService {
                         .lessonId(lessonId)
                         .trackId(request.getTrackId())
                         .build());
+        if (Boolean.TRUE.equals(request.getRequireQuizPass()) && !Boolean.TRUE.equals(progress.getQuizPassed())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Pass the lesson quiz before marking this lesson complete");
+        }
         if (!Boolean.TRUE.equals(progress.getCompleted())) {
             progress.setCompleted(true);
             progress.setCompletedAt(Instant.now());
@@ -162,13 +169,93 @@ public class EnrollmentService {
         } else if (tp.getProgressPct() == 50 || tp.getProgressPct() == 75) {
             eventProducer.publishProgressCompleted(userId, request.getTrackId(), tp.getProgressPct());
         }
-        return TrackProgressResponse.builder()
+        return toTrackProgressResponse(userId, request.getTrackId(), tp);
+    }
+
+    @Transactional
+    public QuizAttemptResponse submitQuizAttempt(Long userId, Long lessonId, QuizAttemptRequest request) {
+        if (request.getTrackId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "trackId is required");
+        }
+        requireEnrollment(userId, request.getTrackId());
+        int score = request.getScore() != null ? request.getScore() : 0;
+        int total = request.getTotalQuestions() != null ? Math.max(1, request.getTotalQuestions()) : 1;
+        int passing = request.getPassingScore() != null ? request.getPassingScore() : 70;
+        boolean passed = request.getPassed() != null
+                ? request.getPassed()
+                : (score * 100 / total) >= passing;
+
+        String answersJson = null;
+        if (request.getAnswers() != null) {
+            try {
+                answersJson = new com.fasterxml.jackson.databind.ObjectMapper()
+                        .writeValueAsString(request.getAnswers());
+            } catch (Exception ignored) {
+                answersJson = null;
+            }
+        }
+
+        QuizAttempt attempt = quizAttemptRepository.save(QuizAttempt.builder()
+                .userId(userId)
+                .lessonId(lessonId)
                 .trackId(request.getTrackId())
-                .progress(tp.getProgressPct())
-                .completedLessons(tp.getCompletedLessons())
-                .totalLessons(tp.getTotalLessons())
-                .lastLessonId(tp.getLastLessonId())
+                .score(score)
+                .totalQuestions(total)
+                .passingScore(passing)
+                .passed(passed)
+                .answersJson(answersJson)
+                .build());
+
+        LessonProgress progress = lessonProgressRepository.findByUserIdAndLessonId(userId, lessonId)
+                .orElseGet(() -> LessonProgress.builder()
+                        .userId(userId)
+                        .lessonId(lessonId)
+                        .trackId(request.getTrackId())
+                        .build());
+        if (passed) {
+            progress.setQuizPassed(true);
+            progress.setQuizPassedAt(Instant.now());
+        }
+        lessonProgressRepository.save(progress);
+
+        return QuizAttemptResponse.builder()
+                .id(attempt.getId())
+                .lessonId(lessonId)
+                .trackId(request.getTrackId())
+                .score(score)
+                .totalQuestions(total)
+                .passingScore(passing)
+                .passed(passed)
+                .attemptedAt(attempt.getAttemptedAt())
                 .build();
+    }
+
+    public List<QuizAttemptResponse> quizAttemptsForLesson(Long userId, Long lessonId) {
+        return quizAttemptRepository.findByUserIdAndLessonIdOrderByAttemptedAtDesc(userId, lessonId).stream()
+                .map(a -> QuizAttemptResponse.builder()
+                        .id(a.getId())
+                        .lessonId(a.getLessonId())
+                        .trackId(a.getTrackId())
+                        .score(a.getScore())
+                        .totalQuestions(a.getTotalQuestions())
+                        .passingScore(a.getPassingScore())
+                        .passed(a.getPassed())
+                        .attemptedAt(a.getAttemptedAt())
+                        .build())
+                .toList();
+    }
+
+    public Map<String, Object> lessonUnlockStatus(Long userId, Long lessonId, String trackId) {
+        requireEnrollment(userId, trackId);
+        LessonProgress progress = lessonProgressRepository.findByUserIdAndLessonId(userId, lessonId).orElse(null);
+        boolean completed = progress != null && Boolean.TRUE.equals(progress.getCompleted());
+        boolean quizPassed = progress != null && Boolean.TRUE.equals(progress.getQuizPassed());
+        return Map.of(
+                "lessonId", lessonId,
+                "trackId", trackId,
+                "completed", completed,
+                "quizPassed", quizPassed
+        );
     }
 
     @Transactional
@@ -194,13 +281,7 @@ public class EnrollmentService {
             eventProducer.publishTrackCompleted(userId, trackId);
         }
 
-        return TrackProgressResponse.builder()
-                .trackId(trackId)
-                .progress(100)
-                .completedLessons(total)
-                .totalLessons(total)
-                .lastLessonId(tp.getLastLessonId())
-                .build();
+        return toTrackProgressResponse(userId, trackId, tp);
     }
 
     public StudentDashboardResponse studentDashboard(Long userId) {
@@ -366,6 +447,27 @@ public class EnrollmentService {
                 .duration(duration)
                 .modules(modules)
                 .description(description)
+                .build();
+    }
+
+    private TrackProgressResponse toTrackProgressResponse(Long userId, String trackId, TrackProgress tp) {
+        List<Long> completedIds = lessonProgressRepository
+                .findByUserIdAndTrackIdAndCompletedTrue(userId, trackId).stream()
+                .map(LessonProgress::getLessonId)
+                .toList();
+        List<Long> quizPassedIds = lessonProgressRepository
+                .findByUserIdAndTrackId(userId, trackId).stream()
+                .filter(p -> Boolean.TRUE.equals(p.getQuizPassed()))
+                .map(LessonProgress::getLessonId)
+                .toList();
+        return TrackProgressResponse.builder()
+                .trackId(trackId)
+                .progress(tp != null ? tp.getProgressPct() : 0)
+                .completedLessons(tp != null ? tp.getCompletedLessons() : completedIds.size())
+                .totalLessons(tp != null ? tp.getTotalLessons() : CatalogMetadata.totalLessonsForTrack(trackId))
+                .lastLessonId(tp != null ? tp.getLastLessonId() : null)
+                .completedLessonIds(completedIds)
+                .quizPassedLessonIds(quizPassedIds)
                 .build();
     }
 

@@ -50,7 +50,7 @@ public class CertificateMetadataResolver {
         }
         String mentor = course.instructor();
         if (mentor == null || mentor.isBlank()) {
-            mentor = "Cloud Nexus Mentor";
+            mentor = "Realm Mentor";
         }
         return new TrackMetadata.Meta(
                 course.title(),

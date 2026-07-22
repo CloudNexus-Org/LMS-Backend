@@ -64,6 +64,29 @@ public class EnrollmentController {
         return enrollmentService.completeLesson(userId, lessonId, request);
     }
 
+    @PostMapping("/progress/lessons/{lessonId}/quiz-attempts")
+    public QuizAttemptResponse submitQuizAttempt(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long lessonId,
+            @RequestBody QuizAttemptRequest request) {
+        return enrollmentService.submitQuizAttempt(userId, lessonId, request);
+    }
+
+    @GetMapping("/progress/lessons/{lessonId}/quiz-attempts")
+    public List<QuizAttemptResponse> quizAttempts(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long lessonId) {
+        return enrollmentService.quizAttemptsForLesson(userId, lessonId);
+    }
+
+    @GetMapping("/progress/lessons/{lessonId}/status")
+    public java.util.Map<String, Object> lessonStatus(
+            @RequestHeader("X-User-Id") Long userId,
+            @PathVariable Long lessonId,
+            @RequestParam String trackId) {
+        return enrollmentService.lessonUnlockStatus(userId, lessonId, trackId);
+    }
+
     @PostMapping("/progress/tracks/{trackId}/finish")
     public TrackProgressResponse finishTrack(
             @RequestHeader("X-User-Id") Long userId,

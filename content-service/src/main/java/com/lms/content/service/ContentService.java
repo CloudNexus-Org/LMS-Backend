@@ -123,6 +123,13 @@ public class ContentService {
         mentorOnly(mentorId, role);
         getOwnedCourse(mentorId, courseId);
         CourseModule module = getModuleInCourse(courseId, moduleId);
+        boolean uploadInProgress = lessonRepository.findByModuleIdOrderByOrderIndexAsc(moduleId).stream()
+                .anyMatch(Lesson::isUploadInProgress);
+        if (uploadInProgress) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cannot delete module while a lesson video upload is in progress");
+        }
         lessonRepository.deleteByModuleId(moduleId);
         moduleRepository.delete(module);
         return Map.of("message", "Module deleted");
@@ -146,6 +153,8 @@ public class ContentService {
                 .readingContent(request.getReadingContent())
                 .previewFree(Boolean.TRUE.equals(request.getPreviewFree()))
                 .summary(request.getSummary())
+                .quizJson(serializeQuiz(request.getQuiz()))
+                .uploadInProgress(Boolean.TRUE.equals(request.getUploadInProgress()))
                 .build();
         Lesson saved = lessonRepository.save(lesson);
         eventPublisher.publishLessonCreated(saved, courseId, mentorId);
@@ -165,6 +174,8 @@ public class ContentService {
         if (request.getReadingContent() != null) lesson.setReadingContent(request.getReadingContent());
         if (request.getPreviewFree() != null) lesson.setPreviewFree(request.getPreviewFree());
         if (request.getSummary() != null) lesson.setSummary(request.getSummary());
+        if (request.getQuiz() != null) lesson.setQuizJson(serializeQuiz(request.getQuiz()));
+        if (request.getUploadInProgress() != null) lesson.setUploadInProgress(request.getUploadInProgress());
         return toLessonResponse(lessonRepository.save(lesson), courseId, null);
     }
 
@@ -634,6 +645,7 @@ public class ContentService {
     }
 
     private LessonResponse toLessonResponse(Lesson lesson, Long courseId, String courseTitle) {
+        Map<String, Object> quiz = deserializeQuiz(lesson.getQuizJson());
         return LessonResponse.builder()
                 .id(lesson.getId())
                 .moduleId(lesson.getModuleId())
@@ -649,7 +661,29 @@ public class ContentService {
                 .previewFree(lesson.isPreviewFree())
                 .free(lesson.isPreviewFree())
                 .summary(lesson.getSummary())
+                .quiz(quiz)
+                .hasQuiz(quiz != null && quiz.get("questions") instanceof Collection<?> q && !q.isEmpty())
+                .uploadInProgress(lesson.isUploadInProgress())
                 .build();
+    }
+
+    private String serializeQuiz(Map<String, Object> quiz) {
+        if (quiz == null) return null;
+        try {
+            return objectMapper.writeValueAsString(quiz);
+        } catch (JsonProcessingException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid quiz payload");
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> deserializeQuiz(String json) {
+        if (json == null || json.isBlank()) return null;
+        try {
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 
     private ResourceResponse toResourceResponse(LessonResource r) {

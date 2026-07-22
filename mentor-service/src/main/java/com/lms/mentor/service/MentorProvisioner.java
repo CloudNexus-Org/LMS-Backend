@@ -41,7 +41,7 @@ public class MentorProvisioner {
                 .role("Mentor")
                 .company("")
                 .trackLabel("")
-                .bio("Cloud Nexus mentor")
+                .bio("Realm mentor")
                 .longBio("")
                 .avatarUrl("")
                 .rating(0.0)

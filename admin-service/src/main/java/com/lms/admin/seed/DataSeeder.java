@@ -62,11 +62,11 @@ public class DataSeeder implements CommandLineRunner {
     private void seedSettings() {
         Instant now = Instant.now();
         platformSettingRepository.saveAll(List.of(
-                setting("platform.name", "Cloud Nexus", now),
+                setting("platform.name", "Realm", now),
                 setting("platform.gst_rate", "0.18", now),
                 setting("platform.commission_pct", "0.30", now),
                 setting("platform.currency", "INR", now),
-                setting("platform.support_email", "support@cloudnexus.com", now)
+                setting("platform.support_email", "support@realm.learn", now)
         ));
     }
 
