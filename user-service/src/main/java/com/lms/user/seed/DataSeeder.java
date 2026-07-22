@@ -5,75 +5,49 @@ import com.lms.user.model.UserSettings;
 import com.lms.user.model.UserStatus;
 import com.lms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.util.List;
 
+/**
+ * Ensures a bootstrap admin profile exists with the same id as auth-service DataSeeder.
+ */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataSeeder implements CommandLineRunner {
 
-        private final UserRepository userRepository;
+    private static final long ADMIN_ID = 1L;
+    private static final String ADMIN_EMAIL = "admin@cloudnexus.com";
 
-        @Override
-        @Transactional
-        public void run(String... args) {
-                if (userRepository.count() > 0) {
-                        return;
-                }
+    private final UserRepository userRepository;
 
-                userRepository.saveAll(List.of(
-                                user(1L, "admin@realm.learn", "Admin User", "ADMIN", UserStatus.ACTIVE,
-                                                date(2023, 12, 1), hoursAgo(1))));
+    @Override
+    @Transactional
+    public void run(String... args) {
+        if (userRepository.findByEmailIgnoreCase(ADMIN_EMAIL).isPresent()
+                || userRepository.existsById(ADMIN_ID)) {
+            return;
         }
-
-        private User user(Long id, String email, String fullName, String role, UserStatus status,
-                        Instant joinedAt, Instant lastActive) {
-                return user(id, email, fullName, role, status, joinedAt, lastActive,
-                                null, null, null, null, null, null);
-        }
-
-        private User user(Long id, String email, String fullName, String role, UserStatus status,
-                        Instant joinedAt, Instant lastActive,
-                        String username, String professionalRole, String company,
-                        String trackLabel, String location, String bio) {
-                User user = User.builder()
-                                .id(id)
-                                .email(email)
-                                .fullName(fullName)
-                                .role(role)
-                                .status(status)
-                                .joinedAt(joinedAt)
-                                .lastActive(lastActive)
-                                .username(username)
-                                .professionalRole(professionalRole)
-                                .company(company)
-                                .trackLabel(trackLabel)
-                                .location(location)
-                                .bio(bio)
-                                .build();
-                user.setSettings(UserSettings.builder().user(user).build());
-                return user;
-        }
-
-        private Instant date(int year, int month, int day) {
-                return LocalDate.of(year, month, day).atStartOfDay().toInstant(ZoneOffset.UTC);
-        }
-
-        private Instant hoursAgo(long hours) {
-                return Instant.now().minusSeconds(hours * 3600);
-        }
-
-        private Instant minutesAgo(long minutes) {
-                return Instant.now().minusSeconds(minutes * 60);
-        }
-
-        private Instant daysAgo(long days) {
-                return Instant.now().minusSeconds(days * 86400);
-        }
+        Instant now = Instant.now();
+        User admin = User.builder()
+                .id(ADMIN_ID)
+                .email(ADMIN_EMAIL)
+                .fullName("Admin User")
+                .role("ADMIN")
+                .status(UserStatus.ACTIVE)
+                .joinedAt(now)
+                .lastActive(now)
+                .username("admin")
+                .build();
+        UserSettings settings = UserSettings.builder()
+                .user(admin)
+                .build();
+        admin.setSettings(settings);
+        userRepository.save(admin);
+        log.info("Seeded bootstrap admin profile id={} email={}", ADMIN_ID, ADMIN_EMAIL);
+    }
 }

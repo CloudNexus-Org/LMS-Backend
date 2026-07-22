@@ -3,6 +3,7 @@ package com.lms.learning.controller;
 import com.lms.learning.dto.*;
 import com.lms.learning.service.LearningService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +16,12 @@ public class LearningController {
     private final LearningService learningService;
 
     @GetMapping("/sessions/resume")
-    public SessionResponse resumeSession(@RequestHeader("X-User-Id") Long userId) {
-        return learningService.resumeSession(userId);
+    public ResponseEntity<SessionResponse> resumeSession(@RequestHeader("X-User-Id") Long userId) {
+        SessionResponse session = learningService.resumeSessionOrNull(userId);
+        if (session == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(session);
     }
 
     @PostMapping("/sessions")

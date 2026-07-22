@@ -63,7 +63,7 @@ public class MentorService {
 
     public Map<String, Object> getDashboard(Long userId) {
         Mentor mentor = requireMentor(userId);
-        long studentCount = mentorStudentRepository.findByMentorUserId(userId).size();
+        long studentCount = mentorStudentRepository.countDistinctStudentsByMentorUserId(userId);
         int courseCount = mentor.getTaughtCourses() != null ? mentor.getTaughtCourses().size() : 0;
         return Map.of(
                 "mentor", MentorResponse.summary(mentor),
@@ -93,6 +93,15 @@ public class MentorService {
 
     public List<MentorStudent> getStudents(Long userId) {
         return mentorStudentRepository.findByMentorUserId(userId);
+    }
+
+    public Map<Long, Long> getStudentCountsByCourse(Long userId) {
+        Map<Long, Long> counts = new java.util.HashMap<>();
+        for (MentorStudent row : mentorStudentRepository.findByMentorUserId(userId)) {
+            if (row.getCourseId() == null) continue;
+            counts.merge(row.getCourseId(), 1L, Long::sum);
+        }
+        return counts;
     }
 
     public MentorStudent getStudent(Long userId, Long studentId) {

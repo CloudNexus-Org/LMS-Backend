@@ -6,6 +6,7 @@ import com.lms.admin.repository.CourseApprovalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-//@Component
+/** Removes approvals for inactive mentors — OFF by default. */
+@Component
+@ConditionalOnProperty(name = "lms.directory.cleanup.enabled", havingValue = "true")
 @Order(1)
 @RequiredArgsConstructor
 @Slf4j

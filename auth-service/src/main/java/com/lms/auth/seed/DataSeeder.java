@@ -4,14 +4,24 @@ import com.lms.auth.model.AuthCredential;
 import com.lms.auth.model.UserRole;
 import com.lms.auth.repository.AuthCredentialRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Ensures a bootstrap admin exists so the platform is usable on a fresh database.
+ * Does not wipe or replace existing credentials.
+ */
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataSeeder implements CommandLineRunner {
+
+    private static final long ADMIN_ID = 1L;
+    private static final String ADMIN_EMAIL = "admin@cloudnexus.com";
+    private static final String ADMIN_PASSWORD = "Password123!";
 
     private final AuthCredentialRepository credentialRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -19,22 +29,18 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        if (credentialRepository.count() > 0) {
+        if (credentialRepository.existsByEmailIgnoreCase(ADMIN_EMAIL)
+                || credentialRepository.existsById(ADMIN_ID)) {
             return;
         }
-
-        // Admin User credential (ID aligned with user-service seed data)
-        seedUser(1L, "admin@realm.learn", "Password123!", UserRole.ADMIN, "Admin User");
-    }
-
-    private void seedUser(Long id, String email, String password, UserRole role, String fullName) {
         credentialRepository.save(AuthCredential.builder()
-                .id(id)
-                .email(email)
-                .passwordHash(passwordEncoder.encode(password))
-                .fullName(fullName)
-                .role(role)
+                .id(ADMIN_ID)
+                .email(ADMIN_EMAIL)
+                .passwordHash(passwordEncoder.encode(ADMIN_PASSWORD))
+                .fullName("Admin User")
+                .role(UserRole.ADMIN)
                 .active(true)
                 .build());
+        log.info("Seeded bootstrap admin credential id={} email={}", ADMIN_ID, ADMIN_EMAIL);
     }
 }

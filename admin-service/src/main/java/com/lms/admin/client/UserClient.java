@@ -23,8 +23,16 @@ public class UserClient {
 
     public boolean isActiveMentor(Long userId) {
         return fetchProfile(userId)
-                .filter(profile -> "MENTOR".equalsIgnoreCase(String.valueOf(profile.get("role"))))
-                .filter(profile -> !"Deleted".equalsIgnoreCase(String.valueOf(profile.get("status"))))
+                .filter(profile -> {
+                    // user-service returns display values: "Mentor", "Admin", "Student"
+                    // guard against both raw ("MENTOR") and display ("Mentor") forms
+                    String role = String.valueOf(profile.get("role"));
+                    return "mentor".equalsIgnoreCase(role);
+                })
+                .filter(profile -> {
+                    String status = String.valueOf(profile.get("status"));
+                    return !"Deleted".equalsIgnoreCase(status) && !"Banned".equalsIgnoreCase(status);
+                })
                 .isPresent();
     }
 

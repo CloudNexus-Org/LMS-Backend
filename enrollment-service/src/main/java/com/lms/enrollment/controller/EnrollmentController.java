@@ -6,7 +6,10 @@ import com.lms.enrollment.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/enrollments")
@@ -104,6 +107,23 @@ public class EnrollmentController {
             @RequestHeader("X-User-Id") Long userId,
             @PathVariable String trackId) {
         return enrollmentService.checkEnrollment(userId, trackId);
+    }
+
+    /** Active enrollment count for one catalog course (excludes CANCELLED). */
+    @GetMapping("/courses/{courseId}/count")
+    public Map<String, Long> courseEnrollmentCount(@PathVariable Long courseId) {
+        return Map.of("courseId", courseId, "count", enrollmentService.activeEnrollmentCount(courseId));
+    }
+
+    /** Batch enrollment counts: ?courseIds=1,2,3 */
+    @GetMapping("/counts")
+    public Map<Long, Long> courseEnrollmentCounts(@RequestParam("courseIds") String courseIds) {
+        List<Long> ids = Arrays.stream(courseIds.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+        return enrollmentService.activeEnrollmentCounts(ids);
     }
 
     @DeleteMapping("/{enrollmentId}")

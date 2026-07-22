@@ -22,10 +22,19 @@ public class LearningService {
     private final LessonQaRepository lessonQaRepository;
 
     public SessionResponse resumeSession(Long userId) {
+        SessionResponse session = resumeSessionOrNull(userId);
+        if (session == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No learning session found");
+        }
+        return session;
+    }
+
+    /** Used by HTTP layer — empty resume is normal for new students (204). */
+    public SessionResponse resumeSessionOrNull(Long userId) {
         return sessionRepository.findByUserIdOrderByUpdatedAtDesc(userId).stream()
                 .findFirst()
                 .map(SessionResponse::from)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No learning session found"));
+                .orElse(null);
     }
 
     @Transactional

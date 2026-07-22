@@ -115,6 +115,19 @@ public class AuthService {
         log.info("Provisioned auth credential id={} email={} role={}", id, normalizedEmail, role);
     }
 
+    /** Keep login/display name in sync when user-service profile is updated. */
+    @Transactional
+    public void syncProfileName(String email, String fullName) {
+        if (email == null || email.isBlank() || fullName == null || fullName.isBlank()) {
+            return;
+        }
+        credentialRepository.findByEmailIgnoreCase(normalizeEmail(email)).ifPresent(user -> {
+            user.setFullName(fullName.trim());
+            credentialRepository.save(user);
+            log.info("Synced auth fullName for email={}", user.getEmail());
+        });
+    }
+
     @Transactional
     public AuthResponse login(LoginRequest request, String ip) {
         String email = normalizeEmail(request.getEmail());

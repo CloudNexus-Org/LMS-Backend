@@ -40,15 +40,20 @@ public class UserService {
     private final UserEventProducer eventProducer;
     private final AuthProvisioningClient authProvisioningClient;
 
-    public ProfileResponse getProfile(Long userId) {
-        User user = requireActiveUser(userId);
+    public ProfileResponse getProfile(Long userId, String email) {
+        User user = resolveActiveUser(userId, email);
         touchLastActive(user);
         return toProfileResponse(user);
     }
 
+    /** @deprecated use {@link #getProfile(Long, String)} */
+    public ProfileResponse getProfile(Long userId) {
+        return getProfile(userId, null);
+    }
+
     @Transactional
-    public ProfileResponse updateProfile(Long userId, ProfileUpdateRequest request) {
-        User user = requireActiveUser(userId);
+    public ProfileResponse updateProfile(Long userId, String email, ProfileUpdateRequest request) {
+        User user = resolveActiveUser(userId, email);
         if (request.getFullName() != null && !request.getFullName().isBlank()) {
             user.setFullName(request.getFullName().trim());
         }
@@ -70,12 +75,17 @@ public class UserService {
         user.setLastActive(Instant.now());
         userRepository.save(user);
         eventProducer.publishUserUpdated(user.getId(), user.getEmail(), user.getFullName(), user.getRole());
+        try {
+            authProvisioningClient.syncProfileName(user.getEmail(), user.getFullName());
+        } catch (Exception ex) {
+            // Profile row is already saved; auth display name sync is best-effort
+        }
         return toProfileResponse(user);
     }
 
     @Transactional
-    public ProfileResponse updateAvatar(Long userId, AvatarUpdateRequest request) {
-        User user = requireActiveUser(userId);
+    public ProfileResponse updateAvatar(Long userId, String email, AvatarUpdateRequest request) {
+        User user = resolveActiveUser(userId, email);
         user.setAvatarUrl(request.getAvatarUrl());
         user.setLastActive(Instant.now());
         userRepository.save(user);
@@ -83,14 +93,24 @@ public class UserService {
         return toProfileResponse(user);
     }
 
-    public SettingsResponse getSettings(Long userId) {
-        User user = requireActiveUser(userId);
+    /** @deprecated use {@link #updateAvatar(Long, String, AvatarUpdateRequest)} */
+    @Transactional
+    public ProfileResponse updateAvatar(Long userId, AvatarUpdateRequest request) {
+        return updateAvatar(userId, null, request);
+    }
+
+    public SettingsResponse getSettings(Long userId, String email) {
+        User user = resolveActiveUser(userId, email);
         return toSettingsResponse(requireSettings(user));
     }
 
+    public SettingsResponse getSettings(Long userId) {
+        return getSettings(userId, null);
+    }
+
     @Transactional
-    public SettingsResponse updateSettings(Long userId, SettingsUpdateRequest request) {
-        User user = requireActiveUser(userId);
+    public SettingsResponse updateSettings(Long userId, String email, SettingsUpdateRequest request) {
+        User user = resolveActiveUser(userId, email);
         UserSettings settings = requireSettings(user);
         if (request.getTheme() != null) {
             settings.setTheme(request.getTheme());
@@ -107,6 +127,11 @@ public class UserService {
         user.setLastActive(Instant.now());
         userRepository.save(user);
         return toSettingsResponse(settings);
+    }
+
+    @Transactional
+    public SettingsResponse updateSettings(Long userId, SettingsUpdateRequest request) {
+        return updateSettings(userId, null, request);
     }
 
     public PagedResponse<AdminUserResponse> listUsers(String search, String role, String status, int page, int size) {
@@ -132,11 +157,17 @@ public class UserService {
     @Transactional
     public AdminUserResponse createUser(CreateUserRequest request) {
         validateEmailAvailable(request.getEmail(), null);
+        if (request.getPassword() == null || request.getPassword().length() < 8) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "Password must be at least 8 characters");
+        }
+        String role = normalizeRole(request.getRole());
+        Long userId = nextId();
         User user = buildUser(
-                nextId(),
+                userId,
                 request.getEmail(),
                 request.getFullName(),
-                normalizeRole(request.getRole()),
+                role,
                 request.getPhone(),
                 request.getBio(),
                 UserStatus.ACTIVE,
@@ -145,6 +176,12 @@ public class UserService {
         );
         attachDefaultSettings(user);
         userRepository.save(user);
+        authProvisioningClient.provisionCredential(
+                userId,
+                user.getEmail(),
+                request.getPassword(),
+                user.getFullName(),
+                role);
         return toAdminUserResponse(user);
     }
 
@@ -290,6 +327,21 @@ public class UserService {
 
     @Transactional
     public void createProfileFromRegistration(Long userId, String email, String role, String fullName) {
+        if (email != null && !email.isBlank()) {
+            var existingByEmail = userRepository.findByEmailIgnoreCase(email.trim());
+            if (existingByEmail.isPresent()) {
+                User existing = existingByEmail.get();
+                if (fullName != null && !fullName.isBlank()) {
+                    existing.setFullName(fullName.trim());
+                }
+                if (role != null && !role.isBlank()) {
+                    existing.setRole(normalizeRole(role));
+                }
+                existing.setLastActive(Instant.now());
+                userRepository.save(existing);
+                return;
+            }
+        }
         if (userRepository.existsById(userId)) {
             return;
         }
@@ -332,6 +384,23 @@ public class UserService {
     private User requireActiveUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        return ensureActive(user);
+    }
+
+    /**
+     * Prefer email when present — auth-service and user-service IDs can drift
+     * (e.g. admin credential id=1 while users.admin row is id=4).
+     */
+    private User resolveActiveUser(Long userId, String email) {
+        if (email != null && !email.isBlank()) {
+            return userRepository.findByEmailIgnoreCase(email.trim())
+                    .map(this::ensureActive)
+                    .orElseGet(() -> requireActiveUser(userId));
+        }
+        return requireActiveUser(userId);
+    }
+
+    private User ensureActive(User user) {
         if (user.getStatus() == UserStatus.DELETED) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }

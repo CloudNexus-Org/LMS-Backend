@@ -19,6 +19,12 @@ public class AuthProvisioningClient {
     private String authServiceUrl;
 
     public void provisionMentor(Long userId, String email, String password, String fullName) {
+        provisionCredential(userId, email, password, fullName, "MENTOR");
+    }
+
+    public void provisionCredential(
+            Long userId, String email, String password, String fullName, String role) {
+        String normalizedRole = role != null ? role.trim().toUpperCase() : "STUDENT";
         try {
             restClient.post()
                     .uri(authServiceUrl + "/api/auth/internal/provision")
@@ -27,15 +33,32 @@ public class AuthProvisioningClient {
                             "email", email,
                             "password", password,
                             "fullName", fullName,
-                            "role", "MENTOR"))
+                            "role", normalizedRole))
                     .retrieve()
                     .toBodilessEntity();
-            log.info("Provisioned auth credentials for mentor userId={} email={}", userId, email);
+            log.info("Provisioned auth credentials for userId={} email={} role={}",
+                    userId, email, normalizedRole);
         } catch (Exception ex) {
-            log.error("Failed to provision auth credentials for mentor {}: {}", email, ex.getMessage());
+            log.error("Failed to provision auth credentials for {}: {}", email, ex.getMessage());
             throw new ResponseStatusException(
                     HttpStatus.BAD_GATEWAY,
-                    "Failed to create login credentials for mentor. Please try again.");
+                    "Failed to create login credentials. Please try again.");
+        }
+    }
+
+    public void syncProfileName(String email, String fullName) {
+        if (email == null || email.isBlank() || fullName == null || fullName.isBlank()) {
+            return;
+        }
+        try {
+            restClient.put()
+                    .uri(authServiceUrl + "/api/auth/internal/profile-name")
+                    .body(Map.of("email", email, "fullName", fullName))
+                    .retrieve()
+                    .toBodilessEntity();
+            log.info("Synced auth fullName for email={}", email);
+        } catch (Exception ex) {
+            log.warn("Failed to sync auth fullName for {}: {}", email, ex.getMessage());
         }
     }
 }

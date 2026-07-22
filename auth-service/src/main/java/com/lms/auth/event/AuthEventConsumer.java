@@ -30,6 +30,17 @@ public class AuthEventConsumer {
         authService.provisionCredential(userId, email, password, fullName, UserRole.MENTOR);
     }
 
+    @KafkaListener(topics = "user.updated", groupId = "auth-service")
+    public void onUserUpdated(Map<String, Object> event) {
+        log.info("Received user.updated for auth sync: email={}", event.get("email"));
+        String email = stringValue(event.get("email"));
+        String fullName = stringValue(event.get("fullName"));
+        if (email == null || fullName == null || fullName.isBlank()) {
+            return;
+        }
+        authService.syncProfileName(email, fullName);
+    }
+
     private Long toLong(Object value) {
         return value == null ? null : Long.valueOf(value.toString());
     }

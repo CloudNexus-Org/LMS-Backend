@@ -1,0 +1,15 @@
+# LMS Docker Postgres — pgAdmin connection
+
+Host:     localhost
+Port:     15432
+Database: postgres   (then open lms_auth, lms_users, lms_content, …)
+Username: lms_admin
+Password: lms_secret
+
+Do NOT use:
+- Local “PostgreSQL 18” on port 4321
+- User “postgres” for the Docker LMS DB
+
+Start DB only:
+  cd LMS-Backend
+  docker compose up -d postgres

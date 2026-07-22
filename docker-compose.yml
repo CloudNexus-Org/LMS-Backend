@@ -1,9 +1,9 @@
-version: "3.9"
-
 services:
   # ─── Service Discovery ───
   eureka-server:
-    build: ./eureka-server
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
     ports:
       - "8761:8761"
     environment:
@@ -46,6 +46,8 @@ services:
       - lms-network
 
   # ─── PostgreSQL (one instance, separate DBs per service) ───
+  # Host access: localhost:15432 / user lms_admin / password lms_secret
+  # Check data here in pgAdmin — NOT your local PostgreSQL 18 (often port 4321).
   postgres:
     image: postgres:16-alpine
     command: ["postgres", "-c", "max_connections=200"]
@@ -58,25 +60,65 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infrastructure/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lms_admin -d lms_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
     networks:
       - lms-network
 
-  # ─── API Gateway ───
-  api-gateway:
-    build: ./api-gateway
+  # ─── Auth Service (port 8081) ───
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
     ports:
-      - "8080:8080"
+      - "8081:8081"
     depends_on:
-      - eureka-server
-      - kafka
-      - redis
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
-      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_DATA_REDIS_HOST: redis
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_ENABLED: "false"
+      LMS_DIRECTORY_CLEANUP_ENABLED: "false"
     networks:
       - lms-network
 
+  # ─── User Service (port 8082) ───
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      auth-service:
+        condition: service_started
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      AUTH_SERVICE_URL: http://auth-service:8081
+      EUREKA_ENABLED: "false"
+      LMS_DIRECTORY_CLEANUP_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Catalog Service (port 8083) ───
   catalog-service:
     build:
       context: .
@@ -84,8 +126,10 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -93,9 +137,12 @@ services:
       POSTGRES_PASSWORD: lms_secret
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       EUREKA_ENABLED: "false"
+      LMS_DIRECTORY_CLEANUP_ENABLED: "false"
+      USER_SERVICE_URI: http://user-service:8082
     networks:
       - lms-network
 
+  # ─── Mentor Service (port 8084) ───
   mentor-service:
     build:
       context: .
@@ -103,8 +150,10 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -115,6 +164,126 @@ services:
     networks:
       - lms-network
 
+  # ─── Content Service (port 8085) ───
+  content-service:
+    build:
+      context: .
+      dockerfile: content-service/Dockerfile
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      catalog-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CATALOG_SERVICE_URI: http://catalog-service:8083
+      ADMIN_SERVICE_URI: http://admin-service:8094
+      USER_SERVICE_URI: http://user-service:8082
+      EUREKA_ENABLED: "false"
+      LMS_DIRECTORY_CLEANUP_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Enrollment Service (port 8086) ───
+  enrollment-service:
+    build:
+      context: .
+      dockerfile: enrollment-service/Dockerfile
+    ports:
+      - "8086:8086"
+    depends_on:
+      - postgres
+      - kafka
+      - catalog-service
+      - user-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CATALOG_SERVICE_URI: http://catalog-service:8083
+      USER_SERVICE_URI: http://user-service:8082
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Learning Service (port 8087) ───
+  learning-service:
+    build:
+      context: .
+      dockerfile: learning-service/Dockerfile
+    ports:
+      - "8087:8087"
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Payment Service / Razorpay (port 8089) ───
+  payment-service:
+    build:
+      context: .
+      dockerfile: razorpay/Dockerfile
+    ports:
+      - "8089:8089"
+    depends_on:
+      - postgres
+      - kafka
+      - catalog-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CATALOG_SERVICE_URI: http://catalog-service:8083
+      FRONTEND_URL: http://localhost:5173
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Certificate Service (port 8090) ───
+  certificate-service:
+    build:
+      context: .
+      dockerfile: certificate-service/Dockerfile
+    ports:
+      - "8090:8090"
+    depends_on:
+      - postgres
+      - kafka
+      - catalog-service
+      - user-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      CATALOG_SERVICE_URI: http://catalog-service:8083
+      USER_SERVICE_URI: http://user-service:8082
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Review Service (port 8091) ───
   review-service:
     build:
       context: .
@@ -134,8 +303,132 @@ services:
     networks:
       - lms-network
 
+  # ─── Notification Service (port 8092) ───
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    ports:
+      - "8092:8092"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Analytics Service (port 8093) ───
+  analytics-service:
+    build:
+      context: .
+      dockerfile: analytics-service/Dockerfile
+    ports:
+      - "8093:8093"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Admin Service (port 8094) ───
+  admin-service:
+    build:
+      context: .
+      dockerfile: admin-service/Dockerfile
+    ports:
+      - "8094:8094"
+    depends_on:
+      - postgres
+      - kafka
+      - user-service
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      USER_SERVICE_URI: http://user-service:8082
+      CATALOG_SERVICE_URI: http://catalog-service:8083
+      EUREKA_ENABLED: "false"
+    networks:
+      - lms-network
+
+  # ─── Media Service (port 8095) ───
+  media-service:
+    build:
+      context: .
+      dockerfile: media-service/Dockerfile
+    ports:
+      - "8095:8095"
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: lms_admin
+      POSTGRES_PASSWORD: lms_secret
+      MEDIA_STORAGE_ROOT: /app/uploads
+      MEDIA_BASE_URL: http://localhost:8095/api/media/files
+      EUREKA_ENABLED: "false"
+    volumes:
+      - media_uploads:/app/uploads
+    networks:
+      - lms-network
+
+  # ─── API Gateway (port 8080) ───
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - kafka
+      - redis
+      - auth-service
+      - user-service
+      - admin-service
+      - catalog-service
+      - enrollment-service
+      - learning-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      SPRING_DATA_REDIS_HOST: redis
+      AUTH_SERVICE_URI: http://auth-service:8081
+      USER_SERVICE_URI: http://user-service:8082
+      CATALOG_SERVICE_URI: http://catalog-service:8083
+      MENTOR_SERVICE_URI: http://mentor-service:8084
+      CONTENT_SERVICE_URI: http://content-service:8085
+      ENROLLMENT_SERVICE_URI: http://enrollment-service:8086
+      LEARNING_SERVICE_URI: http://learning-service:8087
+      PAYMENT_SERVICE_URI: http://payment-service:8089
+      CERTIFICATE_SERVICE_URI: http://certificate-service:8090
+      REVIEW_SERVICE_URI: http://review-service:8091
+      NOTIFICATION_SERVICE_URI: http://notification-service:8092
+      ANALYTICS_SERVICE_URI: http://analytics-service:8093
+      ADMIN_SERVICE_URI: http://admin-service:8094
+      MEDIA_SERVICE_URI: http://media-service:8095
+    networks:
+      - lms-network
+
 volumes:
   postgres_data:
+  media_uploads:
 
 networks:
   lms-network:

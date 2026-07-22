@@ -1,4 +1,6 @@
 -- Separate database per microservice (production-ready isolation)
+-- Runs once on first Postgres container init (empty volume only).
+
 CREATE DATABASE lms_auth;
 CREATE DATABASE lms_users;
 CREATE DATABASE lms_catalog;

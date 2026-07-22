@@ -70,6 +70,7 @@ public class CatalogClient {
         return new CourseSnapshot(
                 courseId,
                 stringVal(body.get("title")),
+                toLong(body.get("mentorId")),
                 stringVal(body.get("image")),
                 stringVal(body.get("difficulty")),
                 stringVal(body.get("professor")),
@@ -103,9 +104,24 @@ public class CatalogClient {
         }
     }
 
+    private static Long toLong(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Number n) {
+            return n.longValue();
+        }
+        try {
+            return Long.parseLong(value.toString());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
     public record CourseSnapshot(
             Long courseId,
             String title,
+            Long mentorId,
             String image,
             String badge,
             String instructor,

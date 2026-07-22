@@ -1,9 +1,9 @@
 package com.lms.mentor.event;
 
 import com.lms.mentor.model.Mentor;
-import com.lms.mentor.model.MentorExperience;
-import com.lms.mentor.model.MentorTaughtCourse;
+import com.lms.mentor.model.MentorStudent;
 import com.lms.mentor.repository.MentorRepository;
+import com.lms.mentor.repository.MentorStudentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -18,6 +18,7 @@ import java.util.Map;
 public class MentorEventConsumer {
 
     private final MentorRepository mentorRepository;
+    private final MentorStudentRepository mentorStudentRepository;
 
     @KafkaListener(topics = "mentor.created", groupId = "mentor-service")
     @Transactional
@@ -46,7 +47,69 @@ public class MentorEventConsumer {
         mentorRepository.save(mentor);
     }
 
+    @KafkaListener(topics = "enrollment.created", groupId = "mentor-service")
+    @Transactional
+    public void onEnrollmentCreated(Map<String, Object> event) {
+        Long mentorId = toLong(event.get("mentorId"));
+        Long studentId = toLong(event.get("userId"));
+        Long courseId = toLong(event.get("courseId"));
+        if (mentorId == null || studentId == null) {
+            log.debug("Skipping enrollment.created for mentor roster — missing mentorId/userId: {}", event);
+            return;
+        }
+        if (courseId != null && courseId <= 0) {
+            courseId = null;
+        }
+
+        if (courseId != null) {
+            boolean exists = mentorStudentRepository
+                    .findByMentorUserIdAndStudentIdAndCourseId(mentorId, studentId, courseId)
+                    .isPresent();
+            if (exists) {
+                return;
+            }
+        } else if (mentorStudentRepository.findByMentorUserIdAndStudentId(mentorId, studentId).isPresent()) {
+            return;
+        }
+
+        String studentName = stringVal(event.get("studentName"));
+        if (studentName == null || studentName.isBlank()) {
+            studentName = "Student #" + studentId;
+        }
+        String courseTitle = stringVal(event.get("courseTitle"));
+        if (courseTitle == null || courseTitle.isBlank()) {
+            courseTitle = stringVal(event.get("trackId"));
+        }
+
+        mentorStudentRepository.save(MentorStudent.builder()
+                .mentorUserId(mentorId)
+                .studentId(studentId)
+                .studentName(studentName)
+                .studentEmail("")
+                .courseId(courseId)
+                .courseTitle(courseTitle != null ? courseTitle : "")
+                .progress(0)
+                .status("ACTIVE")
+                .build());
+
+        long distinct = mentorStudentRepository.countDistinctStudentsByMentorUserId(mentorId);
+        mentorRepository.findByUserId(mentorId).ifPresent(mentor -> {
+            mentor.setLearnersCount(String.valueOf(distinct));
+            mentorRepository.save(mentor);
+        });
+        log.info("Linked student {} to mentor {} for course {}", studentId, mentorId, courseId);
+    }
+
     private Long toLong(Object value) {
-        return value == null ? null : Long.valueOf(value.toString());
+        if (value == null) return null;
+        try {
+            return Long.valueOf(value.toString());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private static String stringVal(Object value) {
+        return value != null ? value.toString() : null;
     }
 }

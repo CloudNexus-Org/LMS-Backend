@@ -14,12 +14,16 @@ public class CourseResponse {
     Long id;
     String slug;
     String title;
+    /** Owning mentor user id — used for purchase / enrollment notifications. */
+    Long mentorId;
     String professor;
     String description;
     String image;
     Double rating;
     Integer reviews;
     String enrolled;
+    /** Raw enrollment / purchase count for analytics dashboards. */
+    Integer enrollmentCount;
     String difficulty;
     String duration;
     Integer modules;
@@ -36,12 +40,14 @@ public class CourseResponse {
                 .id(course.getId())
                 .slug(course.getSlug())
                 .title(course.getTitle())
+                .mentorId(course.getMentorId())
                 .professor(course.getProfessor())
                 .description(course.getDescription())
                 .image(course.getThumbnailUrl())
                 .rating(course.getRating())
                 .reviews(course.getReviewCount())
                 .enrolled(course.getEnrolled())
+                .enrollmentCount(course.getEnrollmentCount() != null ? course.getEnrollmentCount() : 0)
                 .difficulty(course.getDifficulty())
                 .duration(course.getDuration())
                 .modules(course.getModules())
