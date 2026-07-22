@@ -32,12 +32,12 @@ public class DataSeeder implements CommandLineRunner {
                 CertificateTemplate.builder()
                         .trackId("cloud")
                         .templateHtml("<html><body><h1>Cloud Engineer Certificate</h1></body></html>")
-                        .logoUrl("https://cloudnexus.com/logo.png")
+                        .logoUrl("https://realm.learn/logo.png")
                         .build(),
                 CertificateTemplate.builder()
                         .trackId("ai")
                         .templateHtml("<html><body><h1>AI Engineer Certificate</h1></body></html>")
-                        .logoUrl("https://cloudnexus.com/logo.png")
+                        .logoUrl("https://realm.learn/logo.png")
                         .build()
         ));
 
@@ -54,7 +54,7 @@ public class DataSeeder implements CommandLineRunner {
                         .mentorName("Dr. Arjan Singh")
                         .track("Cloud Architecture")
                         .status("verified")
-                        .verifyUrl("cloudnexus.com/verify/CN-AWSA-8412")
+                        .verifyUrl("realm.learn/verify/CN-AWSA-8412")
                         .pdfUrl("/api/certificates/download/CN-AWSA-8412.pdf")
                         .build(),
                 Certificate.builder()
@@ -69,7 +69,7 @@ public class DataSeeder implements CommandLineRunner {
                         .mentorName("Sarah Jenkins")
                         .track("AI / ML Engineering")
                         .status("verified")
-                        .verifyUrl("cloudnexus.com/verify/CN-AZAI-9921")
+                        .verifyUrl("realm.learn/verify/CN-AZAI-9921")
                         .pdfUrl("/api/certificates/download/CN-AZAI-9921.pdf")
                         .build()
         ));

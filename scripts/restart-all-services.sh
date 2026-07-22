@@ -15,7 +15,8 @@ sleep 2
 
 echo "Stopping processes on LMS ports..."
 for p in "${PORTS[@]}"; do
-  pid=$(lsof -ti tcp:"$p" 2>/dev/null || true)
+  # Only kill LISTENers — `lsof -ti tcp:PORT` also matches clients and can cascade-kill other services.
+  pid=$(lsof -tiTCP:"$p" -sTCP:LISTEN 2>/dev/null || true)
   if [ -n "$pid" ]; then kill -9 $pid 2>/dev/null || true; fi
 done
 sleep 2

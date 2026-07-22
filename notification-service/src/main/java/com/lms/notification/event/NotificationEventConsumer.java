@@ -24,7 +24,7 @@ public class NotificationEventConsumer {
         notificationService.createNotification(
                 userId,
                 "system",
-                "Welcome to Cloud Nexus!",
+                "Welcome to Realm!",
                 "Hi " + (fullName != null ? fullName : "there") + "! Your account is ready. Explore courses and start learning.",
                 "/student/catalog",
                 "Browse courses",

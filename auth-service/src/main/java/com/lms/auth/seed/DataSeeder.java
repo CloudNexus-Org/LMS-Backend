@@ -23,11 +23,8 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
 
-        // IDs aligned with user-service seed data
-        seedUser(1L, "alex.chen@example.com", "Password123!", UserRole.STUDENT, "Alex Chen");
-        seedUser(2L, "arjan@cloudnexus.com", "Password123!", UserRole.MENTOR, "Dr. Arjan Singh");
-        seedUser(3L, "sarah.m@example.com", "Password123!", UserRole.STUDENT, "Sarah Miller");
-        seedUser(4L, "admin@cloudnexus.com", "Password123!", UserRole.ADMIN, "Admin User");
+        // Admin User credential (ID aligned with user-service seed data)
+        seedUser(1L, "admin@realm.learn", "Password123!", UserRole.ADMIN, "Admin User");
     }
 
     private void seedUser(Long id, String email, String password, UserRole role, String fullName) {

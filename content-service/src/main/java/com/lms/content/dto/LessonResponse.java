@@ -3,6 +3,8 @@ package com.lms.content.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 @Builder
 public class LessonResponse {
@@ -20,4 +22,7 @@ public class LessonResponse {
     private boolean previewFree;
     private boolean free;
     private String summary;
+    private Map<String, Object> quiz;
+    private boolean hasQuiz;
+    private boolean uploadInProgress;
 }

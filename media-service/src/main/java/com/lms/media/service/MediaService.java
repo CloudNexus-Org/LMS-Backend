@@ -55,7 +55,8 @@ public class MediaService {
     @Transactional
     public MediaFileResponse uploadCourseThumbnail(Long userId, String role, MultipartFile file, Long courseId) {
         requireMentor(role);
-        MediaFileResponse response = saveUpload(userId, file, "courses/" + (courseId != null ? courseId : "draft"), IMAGE_EXT, IMAGE_MAX, "course-thumbnail");
+        MediaFileResponse response = saveUpload(userId, file, "courses/" + (courseId != null ? courseId : "draft"),
+                IMAGE_EXT, IMAGE_MAX, "course-thumbnail");
         if (courseId != null) {
             mediaFileRepository.findById(response.getId()).ifPresent(m -> {
                 m.setEntityType("course");
@@ -160,7 +161,8 @@ public class MediaService {
     }
 
     private boolean canDelete(Long userId, String role, MediaFile file) {
-        if (role != null && "ADMIN".equalsIgnoreCase(role)) return true;
+        if (role != null && "ADMIN".equalsIgnoreCase(role))
+            return true;
         return userId != null && userId.equals(file.getUploadedBy());
     }
 

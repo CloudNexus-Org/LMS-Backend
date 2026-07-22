@@ -19,7 +19,7 @@ import java.util.Set;
 public class UserDirectoryCleanup implements CommandLineRunner {
 
     private static final Set<String> ALLOWED_EMAILS = Set.of(
-            "admin@cloudnexus.com",
+            "admin@realm.learn",
             "ronakdhanotiya123@gmail.com",
             "raunakdhanotiyagenai@gmail.com"
     );
@@ -50,7 +50,7 @@ public class UserDirectoryCleanup implements CommandLineRunner {
     }
 
     private void normalizeKeptUser(User user, String email) {
-        if ("admin@cloudnexus.com".equals(email)) {
+        if ("admin@realm.learn".equals(email)) {
             user.setFullName("Admin");
             user.setRole("ADMIN");
             user.setStatus(UserStatus.ACTIVE);

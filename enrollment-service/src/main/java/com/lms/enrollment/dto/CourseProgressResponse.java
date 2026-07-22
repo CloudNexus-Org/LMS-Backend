@@ -14,4 +14,5 @@ public class CourseProgressResponse {
     Integer completedLessons;
     Integer totalLessons;
     List<Long> completedLessonIds;
+    List<Long> quizPassedLessonIds;
 }

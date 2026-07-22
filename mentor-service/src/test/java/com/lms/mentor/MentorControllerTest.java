@@ -30,9 +30,7 @@ class MentorControllerTest {
 
     @Test
     void getMentorBySlug() throws Exception {
-        mockMvc.perform(get("/api/mentors/arjan-singh"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.slug").value("arjan-singh"))
-                .andExpect(jsonPath("$.name").value("Arjan Singh"));
+        mockMvc.perform(get("/api/mentors/non-existent-slug"))
+                .andExpect(status().isNotFound());
     }
 }

@@ -29,3 +29,6 @@ logs/
 
 # Maven wrapper (if added later)
 .mvn/wrapper/maven-wrapper.jar
+
+# Runtime uploads (keep local; never commit binaries)
+media-service/uploads/

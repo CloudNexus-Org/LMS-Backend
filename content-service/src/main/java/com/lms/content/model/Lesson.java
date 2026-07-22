@@ -45,4 +45,16 @@ public class Lesson {
 
     @Column(columnDefinition = "TEXT")
     private String summary;
+
+    /**
+     * JSON quiz definition attached to this lesson.
+     * Shape: { "passingScore": 70, "questions": [ { "id", "prompt", "options": [], "correctIndex" } ] }
+     */
+    @Column(name = "quiz_json", columnDefinition = "TEXT")
+    private String quizJson;
+
+    /** True while a mentor video upload for this lesson is in progress. Blocks parent module deletion. */
+    @Column(name = "upload_in_progress", nullable = false)
+    @Builder.Default
+    private boolean uploadInProgress = false;
 }
