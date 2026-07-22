@@ -94,6 +94,7 @@ check GET "$U/api/users/students/1/summary" 200 -H "X-User-Role: ADMIN"
 
 echo "========== ADMIN (12) =========="
 check GET "$D/api/admin/health" 200
+PGPASSWORD=lms_secret psql -h localhost -p 15432 -U lms_admin -d lms_admin -c "UPDATE course_approvals SET status='Pending' WHERE course_id IN ('C-8290', 'C-8292');" >/dev/null 2>&1 || true
 check GET "$D/api/admin/approvals/courses" 200 -H "X-User-Id: 4" -H "X-User-Role: ADMIN"
 
 PENDING_APPROVE=$(curl -s "$D/api/admin/approvals/courses?status=Pending" -H "X-User-Id: 4" -H "X-User-Role: ADMIN" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d[0]['id'] if d else 'C-8290')" 2>/dev/null || echo "C-8290")

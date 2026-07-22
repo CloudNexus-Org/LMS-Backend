@@ -3,6 +3,8 @@ package com.lms.enrollment.dto;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 @Builder
 public class TrackProgressResponse {
@@ -11,4 +13,6 @@ public class TrackProgressResponse {
     Integer completedLessons;
     Integer totalLessons;
     Long lastLessonId;
+    List<Long> completedLessonIds;
+    List<Long> quizPassedLessonIds;
 }

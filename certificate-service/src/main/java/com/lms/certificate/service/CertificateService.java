@@ -101,7 +101,7 @@ public class CertificateService {
         }
         TrackMetadata.Meta meta = metadataResolver.resolve(trackId, courseIdHint);
         String code = meta.codePrefix() + "-" + ThreadLocalRandom.current().nextInt(1000, 9999);
-        String verifyUrl = "cloudnexus.com/verify/" + code;
+        String verifyUrl = "realm.learn/verify/" + code;
         String recipient = recipientName != null && !recipientName.isBlank()
                 ? recipientName
                 : userClient.displayName(userId).orElse("Student");

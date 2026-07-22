@@ -25,7 +25,7 @@ import java.util.Set;
 public class AuthDirectoryCleanup implements CommandLineRunner {
 
     private static final Set<String> ALLOWED_EMAILS = Set.of(
-            "admin@cloudnexus.com",
+            "admin@realm.learn",
             "ronakdhanotiya123@gmail.com",
             "raunakdhanotiyagenai@gmail.com"
     );

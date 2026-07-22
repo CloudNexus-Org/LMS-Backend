@@ -32,6 +32,13 @@ public class LessonProgress {
     @Builder.Default
     private Integer watchDurationSec = 0;
 
+    /** True after the student passes the lesson-level quiz (if any). */
+    @Column(name = "quiz_passed", nullable = false)
+    @Builder.Default
+    private Boolean quizPassed = false;
+
+    private Instant quizPassedAt;
+
     @CreationTimestamp
     private Instant createdAt;
 

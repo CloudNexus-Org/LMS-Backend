@@ -18,9 +18,12 @@ start_module() {
   cd "$BASE_DIR" || exit 1
   if [ "$mod" = "catalog-service" ] || [ "$mod" = "analytics-service" ]; then
     find "$BASE_DIR/$mod/target/classes" -name '* 2.class' -delete 2>/dev/null || true
-    mvn -pl "$mod" clean -q
   fi
-  mvn -pl "$mod" spring-boot:run -q > "$LOG_DIR/${mod}.log" 2>&1 &
+  if [ -f "$BASE_DIR/$mod/target/$mod-1.0.0-SNAPSHOT.jar" ] && [ $(wc -c < "$BASE_DIR/$mod/target/$mod-1.0.0-SNAPSHOT.jar") -gt 1000000 ]; then
+    java -Xms128m -Xmx256m -jar "$BASE_DIR/$mod/target/$mod-1.0.0-SNAPSHOT.jar" > "$LOG_DIR/${mod}.log" 2>&1 &
+  else
+    mvn -pl "$mod" spring-boot:run -q > "$LOG_DIR/${mod}.log" 2>&1 &
+  fi
   echo $! > "$LOG_DIR/${mod}.pid"
 }
 
@@ -40,9 +43,9 @@ start_module api-gateway
 wait_port 8080 60
 
 for mod in auth-service user-service catalog-service mentor-service; do start_module "$mod"; done
-sleep 25
+sleep 15
 for mod in content-service media-service enrollment-service learning-service; do start_module "$mod"; done
-sleep 25
+sleep 15
 for mod in certificate-service review-service notification-service analytics-service admin-service; do
   start_module "$mod"
 done
