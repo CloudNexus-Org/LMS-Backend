@@ -156,6 +156,11 @@ public class ContentController {
         return contentService.getCatalogCourseLessons(catalogCourseId);
     }
 
+    @GetMapping("/catalog-courses/{catalogCourseId}/curriculum")
+    public List<ModuleResponse> getCatalogCourseCurriculum(@PathVariable Long catalogCourseId) {
+        return contentService.getCatalogCourseCurriculum(catalogCourseId);
+    }
+
     @GetMapping("/lessons/{lessonId}")
     public LessonResponse getLesson(@PathVariable Long lessonId) {
         return contentService.getLessonDetail(lessonId);

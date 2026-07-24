@@ -282,6 +282,8 @@ public class CatalogService {
                             ? request.getOutcomes().stream().filter(o -> o != null && !o.isBlank()).toList()
                             : List.of())
                     .skills(request.getTags() != null ? request.getTags() : List.of())
+                    .roadmapJson(request.getRoadmap())
+                    .instructorsJson(request.getInstructors())
                     .build();
         } else {
             course.setTitle(request.getTitle().trim());
@@ -310,6 +312,12 @@ public class CatalogService {
             }
             if (request.getTags() != null) {
                 course.setSkills(request.getTags());
+            }
+            if (request.getRoadmap() != null) {
+                course.setRoadmapJson(request.getRoadmap());
+            }
+            if (request.getInstructors() != null) {
+                course.setInstructorsJson(request.getInstructors());
             }
             if (!PUBLISHED.equalsIgnoreCase(course.getStatus())) {
                 course.setStatus(PENDING);

@@ -34,6 +34,8 @@ public class CourseResponse {
     List<String> skills;
     String exploreType;
     Boolean freePreview;
+    String roadmap;
+    String instructors;
 
     public static CourseResponse from(Course course) {
         return CourseResponse.builder()
@@ -58,6 +60,8 @@ public class CourseResponse {
                 .skills(course.getSkills() == null ? List.of() : new ArrayList<>(course.getSkills()))
                 .exploreType(course.getExploreType())
                 .freePreview(course.getFreePreview())
+                .roadmap(course.getRoadmapJson())
+                .instructors(course.getInstructorsJson())
                 .build();
     }
 }

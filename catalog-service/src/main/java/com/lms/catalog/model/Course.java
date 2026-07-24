@@ -79,4 +79,11 @@ public class Course {
     @Column(name = "skill_name")
     @Builder.Default
     private List<String> skills = new ArrayList<>();
+
+    @Column(name = "roadmap_json", columnDefinition = "TEXT")
+    private String roadmapJson;
+
+    @Column(name = "instructors_json", columnDefinition = "TEXT")
+    private String instructorsJson;
 }
+

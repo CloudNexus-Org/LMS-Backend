@@ -17,4 +17,6 @@ public class UpdateCourseRequest {
     private String requirements;
     private String trackId;
     private String thumbnailUrl;
+    private String roadmap;
+    private String instructors;
 }

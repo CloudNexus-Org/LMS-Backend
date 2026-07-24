@@ -57,6 +57,12 @@ public class CourseContent {
     @Column(name = "thumbnail_url")
     private String thumbnailUrl;
 
+    @Column(name = "roadmap_json", columnDefinition = "TEXT")
+    private String roadmapJson;
+
+    @Column(name = "instructors_json", columnDefinition = "TEXT")
+    private String instructorsJson;
+
     @Column(name = "submitted_at")
     private Instant submittedAt;
 

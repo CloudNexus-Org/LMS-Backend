@@ -56,6 +56,8 @@ public class ContentService {
                 .trackId(request.getTrackId())
                 .thumbnailUrl(request.getThumbnailUrl())
                 .pricingPlan("free")
+                .roadmapJson(request.getRoadmap())
+                .instructorsJson(request.getInstructors())
                 .build();
         return toCourseResponse(courseRepository.save(course), true);
     }
@@ -75,6 +77,8 @@ public class ContentService {
         if (request.getRequirements() != null) course.setRequirements(request.getRequirements());
         if (request.getTrackId() != null) course.setTrackId(request.getTrackId());
         if (request.getThumbnailUrl() != null) course.setThumbnailUrl(request.getThumbnailUrl());
+        if (request.getRoadmap() != null) course.setRoadmapJson(request.getRoadmap());
+        if (request.getInstructors() != null) course.setInstructorsJson(request.getInstructors());
         return toCourseResponse(courseRepository.save(course), true);
     }
 
@@ -286,7 +290,9 @@ public class ContentService {
                 course.getThumbnailUrl(),
                 mentorName,
                 fromJsonList(course.getOutcomesJson()),
-                fromJsonList(course.getTagsJson())
+                fromJsonList(course.getTagsJson()),
+                course.getRoadmapJson(),
+                course.getInstructorsJson()
         )).orElse(course.getCourseId());
 
         if (catalogCourseId != null && !Objects.equals(course.getCourseId(), catalogCourseId)) {
@@ -412,6 +418,21 @@ public class ContentService {
                         || c.getStatus() == CourseStatus.APPROVED)
                 .toList();
         return buildOrderedLessonList(courses);
+    }
+
+    public List<ModuleResponse> getCatalogCourseCurriculum(Long catalogCourseId) {
+        List<CourseContent> courses = courseRepository.findByCourseId(catalogCourseId).stream()
+                .filter(c -> c.getStatus() == CourseStatus.PUBLISHED
+                        || c.getStatus() == CourseStatus.APPROVED)
+                .toList();
+        List<ModuleResponse> result = new ArrayList<>();
+        for (CourseContent course : courses) {
+            List<CourseModule> modules = moduleRepository.findByCourseIdOrderByOrderIndexAsc(course.getId());
+            for (CourseModule module : modules) {
+                result.add(toModuleResponse(module, true));
+            }
+        }
+        return result;
     }
 
     private List<CourseContent> resolveCoursesForTrack(String trackId) {
@@ -622,7 +643,9 @@ public class ContentService {
                 .createdAt(course.getCreatedAt())
                 .updatedAt(course.getUpdatedAt())
                 .moduleCount(modules.size())
-                .lessonCount(lessonCount);
+                .lessonCount(lessonCount)
+                .roadmap(course.getRoadmapJson())
+                .instructors(course.getInstructorsJson());
         if (includeModules) {
             builder.modules(modules.stream().map(m -> toModuleResponse(m, true)).toList());
         }

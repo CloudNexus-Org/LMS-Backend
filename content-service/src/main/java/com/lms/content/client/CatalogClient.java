@@ -57,7 +57,9 @@ public class CatalogClient {
             String thumbnailUrl,
             String mentorName,
             List<String> outcomes,
-            List<String> tags
+            List<String> tags,
+            String roadmap,
+            String instructors
     ) {
         Map<String, Object> toMap() {
             Map<String, Object> map = new LinkedHashMap<>();
@@ -77,6 +79,8 @@ public class CatalogClient {
             map.put("mentorName", mentorName != null ? mentorName : "Mentor");
             map.put("outcomes", outcomes != null ? outcomes : List.of());
             map.put("tags", tags != null ? tags : List.of());
+            map.put("roadmap", roadmap != null ? roadmap : "");
+            map.put("instructors", instructors != null ? instructors : "");
             return map;
         }
     }

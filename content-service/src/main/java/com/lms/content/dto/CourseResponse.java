@@ -32,4 +32,6 @@ public class CourseResponse {
     private int moduleCount;
     private int lessonCount;
     private List<ModuleResponse> modules;
+    private String roadmap;
+    private String instructors;
 }

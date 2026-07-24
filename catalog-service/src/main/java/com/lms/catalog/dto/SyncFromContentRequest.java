@@ -23,4 +23,6 @@ public class SyncFromContentRequest {
     private String mentorName;
     private List<String> outcomes = new ArrayList<>();
     private List<String> tags = new ArrayList<>();
+    private String roadmap;
+    private String instructors;
 }

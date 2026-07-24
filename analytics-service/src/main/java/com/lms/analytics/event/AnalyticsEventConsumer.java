@@ -25,7 +25,8 @@ public class AnalyticsEventConsumer {
     public void onPaymentSuccess(Map<String, Object> event) {
         log.info("Received payment.success: {}", event);
         Double amount = toDouble(event.get("amount"));
-        analyticsService.recordPaymentSuccess(amount != null ? amount : 0);
+        Long courseId = toLong(event.get("courseId"));
+        analyticsService.recordPaymentSuccess(amount != null ? amount : 0, courseId);
     }
 
     @KafkaListener(topics = "lesson.completed", groupId = "analytics-service")
@@ -46,7 +47,9 @@ public class AnalyticsEventConsumer {
     @KafkaListener(topics = "enrollment.created", groupId = "analytics-service")
     public void onEnrollmentCreated(Map<String, Object> event) {
         log.info("Received enrollment.created: {}", event);
-        analyticsService.recordEnrollment();
+        Long courseId = toLong(event.get("courseId"));
+        Long mentorId = toLong(event.get("mentorId"));
+        analyticsService.recordEnrollment(courseId, mentorId);
     }
 
     private Long toLong(Object value) {

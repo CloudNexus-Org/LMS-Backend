@@ -52,38 +52,46 @@ public class AnalyticsController {
     @GetMapping("/admin/reports/enrollments")
     public List<Map<String, Object>> enrollmentReport(
             @RequestHeader("X-User-Role") String role,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         requireAdmin(role);
-        return analyticsService.enrollmentReport(from, to);
+        LocalDate start = from != null ? from : LocalDate.now().minusDays(30);
+        LocalDate end = to != null ? to : LocalDate.now();
+        return analyticsService.enrollmentReport(start, end);
     }
 
     @GetMapping("/admin/reports/revenue")
     public List<Map<String, Object>> revenueReport(
             @RequestHeader("X-User-Role") String role,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         requireAdmin(role);
-        return analyticsService.revenueReport(from, to);
+        LocalDate start = from != null ? from : LocalDate.now().minusDays(30);
+        LocalDate end = to != null ? to : LocalDate.now();
+        return analyticsService.revenueReport(start, end);
     }
 
     @GetMapping("/admin/reports/courses")
     public List<Map<String, Object>> courseReport(
             @RequestHeader("X-User-Role") String role,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         requireAdmin(role);
-        return analyticsService.courseReport(from, to);
+        LocalDate start = from != null ? from : LocalDate.now().minusDays(30);
+        LocalDate end = to != null ? to : LocalDate.now();
+        return analyticsService.courseReport(start, end);
     }
 
     @GetMapping("/admin/export")
     public ResponseEntity<String> exportCsv(
             @RequestHeader("X-User-Role") String role,
             @RequestParam(defaultValue = "enrollments") String type,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         requireAdmin(role);
-        String csv = analyticsService.exportCsv(type, from, to);
+        LocalDate start = from != null ? from : LocalDate.now().minusDays(30);
+        LocalDate end = to != null ? to : LocalDate.now();
+        String csv = analyticsService.exportCsv(type, start, end);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + type + "-report.csv")
                 .contentType(MediaType.TEXT_PLAIN)
